@@ -37,23 +37,24 @@ export function MyDayView() {
         if (aIsCompleted && !bIsCompleted) return 1;
         if (!aIsCompleted && bIsCompleted) return -1;
 
+        // For non-completed items:
         const aHasTime = !!a.startTime;
         const bHasTime = !!b.startTime;
 
-        // 2. Sort by time (Highest Priority for non-completed items)
-        if (aHasTime && bHasTime) {
-            const aTime = parseISO(a.startTime!).getTime();
-            const bTime = parseISO(b.startTime!).getTime();
-            if (aTime !== bTime) {
-                return aTime - bTime;
-            }
-        }
-        
-        // 3. Timed items come before non-timed items
+        // 2. Timed items before non-timed items
         if (aHasTime && !bHasTime) return -1;
         if (!aHasTime && bHasTime) return 1;
 
-        // 4. For items without time, sort by importance, then creation date
+        // 3. Both have time: sort by time (ASC)
+        if (aHasTime && bHasTime) {
+          const aTime = parseISO(a.startTime!).getTime();
+          const bTime = parseISO(b.startTime!).getTime();
+          if (aTime !== bTime) {
+            return aTime - bTime;
+          }
+        }
+        
+        // 4. Both have no time (or same time): sort by importance, then creation date
         if (a.type === 'task' && b.type === 'task') {
             if (a.isImportant && !b.isImportant) return -1;
             if (!a.isImportant && b.isImportant) return 1;
