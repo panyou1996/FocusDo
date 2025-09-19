@@ -31,8 +31,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <MainSidebar />
       <SidebarInset className="bg-background min-h-screen">
         <AppHeader />
-        <main className="flex-1 p-4 md:p-6 lg:p-8">
-          <div className="mx-auto w-full max-w-6xl">
+        <main className="flex-1 p-4 md:p-6">
+          <div className="w-full">
            {children}
           </div>
         </main>
