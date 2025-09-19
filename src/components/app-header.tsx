@@ -5,13 +5,11 @@ import { Button } from './ui/button';
 import { SidebarTrigger } from './ui/sidebar';
 import { useTasks } from '@/hooks/use-tasks';
 import { Plus } from 'lucide-react';
-import { AddTaskSheet } from './add-task-sheet';
 import { useState } from 'react';
 
-export function AppHeader() {
+export function AppHeader({ onNewTaskClick }: { onNewTaskClick: () => void }) {
   const pathname = usePathname();
   const { lists } = useTasks();
-  const [isSheetOpen, setIsSheetOpen] = useState(false);
 
   const getTitle = () => {
     if (pathname === '/my-day') return 'My Day';
@@ -35,12 +33,10 @@ export function AppHeader() {
         <SidebarTrigger className="md:hidden" />
         <h1 className="text-xl font-bold">{getTitle()}</h1>
       </div>
-      <AddTaskSheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-        <Button onClick={() => setIsSheetOpen(true)}>
-          <Plus className="-ml-1 h-5 w-5" />
-          New Task
-        </Button>
-      </AddTaskSheet>
+      <Button onClick={onNewTaskClick}>
+        <Plus className="-ml-1 h-5 w-5" />
+        New Task
+      </Button>
     </header>
   );
 }
