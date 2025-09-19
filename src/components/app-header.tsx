@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { SidebarTrigger } from './ui/sidebar';
 import { useTasks, useTasksDispatch } from '@/hooks/use-tasks';
 import { Button } from './ui/button';
-import { Sparkles, Settings, PlusCircle, View, Rows } from 'lucide-react';
+import { Sparkles, Settings, PlusCircle, Rows, View } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { scheduleMyDayTasks } from '@/ai/flows/schedule-my-day-flow';
 import { useToast } from '@/hooks/use-toast';
@@ -14,6 +14,8 @@ import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import type { Task } from '@/lib/types';
 import { isToday, parseISO } from 'date-fns';
+import { ToggleGroup, ToggleGroupItem } from './ui/toggle-group';
+import { cn } from '@/lib/utils';
 
 const DEFAULT_SCHEDULE = 'Works from 8:30 to 11:30, breaks for lunch, works again from 13:00 to 17:30, breaks for dinner, and is free from 18:30 to 22:00.';
 
@@ -148,9 +150,9 @@ export function AppHeader({ viewMode, onSwitchViewMode }: AppHeaderProps) {
     return 'AquaDo';
   };
 
-  const handleViewModeToggle = () => {
-    if (onSwitchViewMode && viewMode) {
-      onSwitchViewMode(viewMode === 'compact' ? 'detailed' : 'compact');
+  const handleViewModeToggle = (value: 'compact' | 'detailed') => {
+    if (onSwitchViewMode && value) {
+      onSwitchViewMode(value);
     }
   }
 
@@ -160,12 +162,27 @@ export function AppHeader({ viewMode, onSwitchViewMode }: AppHeaderProps) {
       <div className="flex items-center gap-2">
         <SidebarTrigger className="md:hidden" />
         <h1 className="text-xl font-bold">{getTitle()}</h1>
-         {pathname === '/my-day' && onSwitchViewMode && viewMode && (
-            <Button variant="outline" size="icon" onClick={handleViewModeToggle} aria-label="Switch view mode">
-                {viewMode === 'compact' ? <Rows className="h-4 w-4" /> : <View className="h-4 w-4" />}
-            </Button>
-        )}
       </div>
+
+       {pathname === '/my-day' && onSwitchViewMode && viewMode && (
+          <div className="absolute left-1/2 -translate-x-1/2">
+            <ToggleGroup 
+              type="single" 
+              value={viewMode}
+              onValueChange={handleViewModeToggle}
+              aria-label="View mode"
+              className="bg-muted p-1 rounded-lg"
+            >
+              <ToggleGroupItem value="compact" aria-label="Compact view" className={cn("px-2", viewMode === 'compact' && 'bg-background shadow')}>
+                <Rows className="h-4 w-4" />
+              </ToggleGroupItem>
+              <ToggleGroupItem value="detailed" aria-label="Detailed view" className={cn("px-2", viewMode === 'detailed' && 'bg-background shadow')}>
+                <View className="h-4 w-4" />
+              </ToggleGroupItem>
+            </ToggleGroup>
+          </div>
+        )}
+
        {pathname === '/my-day' && (
         <div className="flex items-center gap-2">
             <Button onClick={handleAiSchedule} disabled={isScheduling}>
