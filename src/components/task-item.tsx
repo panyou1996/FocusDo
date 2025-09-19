@@ -21,9 +21,8 @@ interface TaskItemProps {
 }
 
 const TimeBadge = ({ date }: { date: string }) => (
-    <div className="flex flex-col items-center justify-center rounded-md bg-muted px-2 py-1 text-sm font-semibold">
-        <span>{format(parseISO(date), 'HH')}</span>
-        <span className="text-xs">{format(parseISO(date), 'mm')}</span>
+    <div className="flex items-center justify-center rounded-md bg-muted px-2 py-1 text-sm font-semibold w-16">
+        <span>{format(parseISO(date), 'HH:mm')}</span>
     </div>
 );
 
@@ -192,27 +191,29 @@ export function TaskItem({ task, variant = 'default' }: TaskItemProps) {
                         </PopoverContent>
                     </Popover>
 
-                    <Popover>
-                        <PopoverTrigger asChild>
-                            <button
-                                data-interactive="true"
-                                className="flex items-center gap-1.5 font-semibold rounded-md px-1 py-0.5 hover:bg-muted"
-                            >
-                                <Clock className="h-3 w-3" />
-                                {hasTime ? format(parseISO(task.dueDate!), 'HH:mm') : 'Add time'}
-                            </button>
-                        </PopoverTrigger>
-                         <PopoverContent className="w-48 p-2">
-                           <div className="flex gap-2">
-                             <Input 
-                                type="text"
-                                placeholder="HH:MM"
-                                defaultValue={hasTime ? format(parseISO(task.dueDate!), 'HH:mm') : ''}
-                                onBlur={handleTimeChange}
-                             />
-                           </div>
-                        </PopoverContent>
-                    </Popover>
+                    { !(variant === 'my-day' && hasTime) && (
+                        <Popover>
+                            <PopoverTrigger asChild>
+                                <button
+                                    data-interactive="true"
+                                    className="flex items-center gap-1.5 font-semibold rounded-md px-1 py-0.5 hover:bg-muted"
+                                >
+                                    <Clock className="h-3 w-3" />
+                                    {hasTime ? format(parseISO(task.dueDate!), 'HH:mm') : 'Add time'}
+                                </button>
+                            </PopoverTrigger>
+                             <PopoverContent className="w-48 p-2">
+                               <div className="flex gap-2">
+                                 <Input 
+                                    type="text"
+                                    placeholder="HH:MM"
+                                    defaultValue={hasTime ? format(parseISO(task.dueDate!), 'HH:mm') : ''}
+                                    onBlur={handleTimeChange}
+                                 />
+                               </div>
+                            </PopoverContent>
+                        </Popover>
+                    )}
                     
                     <Popover>
                         <PopoverTrigger asChild>
