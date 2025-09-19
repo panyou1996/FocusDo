@@ -64,13 +64,19 @@ export function TaskItem({ task, variant = 'default' }: TaskItemProps) {
   };
 
   const handleDateChange = (date: Date | undefined) => {
-    const currentDueDate = task.dueDate ? parseISO(task.dueDate) : new Date();
-    let newDueDate: string | undefined = undefined;
+    let newDueDate: string | undefined;
+
     if (date) {
-        const newDate = new Date(date);
-        newDate.setHours(currentDueDate.getHours(), currentDueDate.getMinutes(), currentDueDate.getSeconds(), currentDueDate.getMilliseconds());
-        newDueDate = newDate.toISOString();
+      const currentDueDate = task.dueDate ? parseISO(task.dueDate) : new Date();
+      const newDate = new Date(date);
+      // Preserve existing time if it exists, otherwise default to midnight
+      newDate.setHours(currentDueDate.getHours(), currentDueDate.getMinutes(), currentDueDate.getSeconds(), currentDueDate.getMilliseconds());
+      newDueDate = newDate.toISOString();
+    } else {
+      // This handles the "Remove due date" case
+      newDueDate = undefined;
     }
+    
     dispatch({ type: 'UPDATE_TASK', payload: { ...task, dueDate: newDueDate } });
   }
 
@@ -243,7 +249,7 @@ export function TaskItem({ task, variant = 'default' }: TaskItemProps) {
                                 onSelect={handleDateChange}
                             />
                             <div className="p-2 border-t">
-                                <Button variant="ghost" size="sm" className="w-full justify-start" onClick={() => handleDateChange(undefined)}>
+                                <Button variant="ghost" size="sm" className="w-full justify-start" onClick={(e) => { e.stopPropagation(); handleDateChange(undefined) }}>
                                     <X className="mr-2 h-4 w-4"/>
                                     Remove due date
                                 </Button>
@@ -318,3 +324,5 @@ export function TaskItem({ task, variant = 'default' }: TaskItemProps) {
 }
 
     
+
+      
