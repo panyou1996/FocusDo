@@ -77,8 +77,6 @@ export function MyDayView() {
   return (
     <div className="space-y-8">
       <div>
-        <h2 className="text-2xl font-bold tracking-tight mb-4">My Day</h2>
-        
         <div className="divide-y divide-border rounded-lg border">
           <TaskList tasks={tasksWithTime} variant="my-day" />
         </div>
