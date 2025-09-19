@@ -1,0 +1,107 @@
+import type { Task, List, Tag } from '@/lib/types';
+import { addDays, subDays } from 'date-fns';
+
+const today = new Date();
+
+export const initialLists: List[] = [
+  { id: 'my-day', title: 'My Day', icon: 'Sun' },
+  { id: 'important', title: 'Important', icon: 'Star' },
+  { id: 'tasks', title: 'Tasks', icon: 'CheckSquare' },
+  { id: 'work', title: 'Work', icon: 'Briefcase' },
+  { id: 'personal', title: 'Personal', icon: 'User' },
+  { id: 'groceries', title: 'Grocery Shopping', icon: 'ShoppingCart' },
+];
+
+export const initialTags: Tag[] = [
+  { id: 'urgent', label: 'Urgent', color: 'red' },
+  { id: 'home', label: 'Home', color: 'blue' },
+  { id: 'work', label: 'Work', color: 'purple' },
+  { id: 'project-aqua', label: 'Project Aqua', color: 'green' },
+  { id: 'quick-task', label: 'Quick Task', color: 'yellow' },
+];
+
+export const initialTasks: Task[] = [
+  {
+    id: 'TASK-001',
+    title: 'Design landing page hero section',
+    description: 'Create a visually stunning hero section with a clear call-to-action.',
+    completed: false,
+    dueDate: addDays(today, 2).toISOString(),
+    duration: 120,
+    listId: 'work',
+    tagIds: ['project-aqua', 'urgent'],
+    createdAt: subDays(today, 5).toISOString(),
+  },
+  {
+    id: 'TASK-002',
+    title: 'Develop navigation component',
+    description: 'Build a responsive and accessible navigation bar for the website.',
+    completed: false,
+    dueDate: addDays(today, 3).toISOString(),
+    duration: 90,
+    listId: 'work',
+    tagIds: ['project-aqua'],
+    createdAt: subDays(today, 4).toISOString(),
+  },
+  {
+    id: 'TASK-003',
+    title: 'Buy milk, eggs, and bread',
+    description: '',
+    completed: false,
+    listId: 'groceries',
+    tagIds: [],
+    createdAt: subDays(today, 1).toISOString(),
+  },
+  {
+    id: 'TASK-004',
+    title: 'Schedule dentist appointment',
+    description: 'Annual check-up and cleaning.',
+    completed: true,
+    listId: 'personal',
+    tagIds: ['home'],
+    createdAt: subDays(today, 10).toISOString(),
+    dueDate: subDays(today, 2).toISOString(),
+  },
+  {
+    id: 'TASK-005',
+    title: 'Finalize Q3 report',
+    description: 'Compile sales data and performance metrics for the quarterly report.',
+    completed: false,
+    dueDate: today.toISOString(),
+    duration: 180,
+    listId: 'work',
+    tagIds: ['urgent', 'work'],
+    createdAt: subDays(today, 3).toISOString(),
+  },
+  {
+    id: 'TASK-006',
+    title: 'Call mom',
+    description: 'Catch up with mom.',
+    completed: false,
+    listId: 'personal',
+    tagIds: ['home'],
+    createdAt: subDays(today, 2).toISOString(),
+  },
+  {
+    id: 'TASK-007',
+    title: 'Water the plants',
+    description: 'The fiddle leaf fig looks a bit sad.',
+    completed: false,
+    dueDate: today.toISOString(),
+    duration: 15,
+    listId: 'tasks',
+    tagIds: ['home', 'quick-task'],
+    createdAt: subDays(today, 1).toISOString(),
+  },
+    {
+    id: 'TASK-008',
+    title: 'Pay electricity bill',
+    description: 'Bill is due at the end of the week.',
+    completed: false,
+    dueDate: addDays(today, 4).toISOString(),
+    duration: 10,
+    listId: 'personal',
+    tagIds: ['home', 'urgent'],
+    createdAt: subDays(today, 2).toISOString(),
+  },
+];
