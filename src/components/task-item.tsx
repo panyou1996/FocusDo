@@ -7,7 +7,7 @@ import { cn, getListColorClasses } from '@/lib/utils';
 import { format, isToday, isTomorrow, parseISO } from 'date-fns';
 import { Badge } from './ui/badge';
 import { Progress } from './ui/progress';
-import { Clock, Sun, X, Calendar, GripVertical, Star, CalendarDays, Tag } from 'lucide-react';
+import { Clock, Sun, X, Calendar, GripVertical, Star, CalendarDays, Tag, Plus, Check as CheckIcon } from 'lucide-react';
 import { Button } from './ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { useMemo, useState } from 'react';
@@ -79,6 +79,13 @@ export function TaskItem({ task, variant = 'default' }: TaskItemProps) {
     const newTagIds = task.tagIds.filter(id => id !== tagId);
     dispatch({ type: 'UPDATE_TASK', payload: { ...task, tagIds: newTagIds } });
   }
+
+  const handleToggleTag = (tagId: string) => {
+    const newTagIds = task.tagIds.includes(tagId)
+      ? task.tagIds.filter(id => id !== tagId)
+      : [...task.tagIds, tagId];
+    dispatch({ type: 'UPDATE_TASK', payload: { ...task, tagIds: newTagIds } });
+  };
 
   const toggleImportant = () => {
     dispatch({ type: 'UPDATE_TASK', payload: { ...task, isImportant: !task.isImportant } });
@@ -215,26 +222,48 @@ export function TaskItem({ task, variant = 'default' }: TaskItemProps) {
                         </PopoverContent>
                     </Popover>
 
-                    <Popover>
-                        <PopoverTrigger asChild>
-                            <div data-interactive="true" className="flex items-center gap-1.5 font-semibold rounded-md px-1 py-0.5 hover:bg-muted cursor-pointer">
-                                <Tag className="h-3 w-3" />
-                                {taskTags.map((tag) => (
-                                    <Badge 
-                                        key={tag.id} 
-                                        variant="outline" 
-                                        className="text-xs font-normal group/tag relative pr-1.5"
-                                    >
-                                        #{tag.label}
-                                    </Badge>
-                                ))}
-                                {taskTags.length === 0 && <span className="font-semibold text-muted-foreground">Add tag</span>}
-                            </div>
-                        </PopoverTrigger>
-                         <PopoverContent className="w-60 p-2">
-                           ...
-                        </PopoverContent>
-                    </Popover>
+                    <div data-interactive="true" className="flex items-center gap-1.5 rounded-md px-1 py-0.5">
+                        <Tag className="h-3 w-3" />
+                        {taskTags.map((tag) => (
+                            <Badge 
+                                key={tag.id} 
+                                variant="outline" 
+                                className="text-xs font-normal group/tag relative pr-1.5 cursor-pointer"
+                                onClick={() => handleRemoveTag(tag.id)}
+                            >
+                                #{tag.label}
+                                <span className="absolute -right-1 -top-1 hidden group-hover/tag:flex items-center justify-center w-3.5 h-3.5 bg-background border rounded-full">
+                                    <X className="w-2.5 h-2.5" />
+                                </span>
+                            </Badge>
+                        ))}
+                         <Popover>
+                            <PopoverTrigger asChild>
+                                <button className="flex items-center justify-center w-5 h-5 rounded-full hover:bg-muted">
+                                    <Plus className="h-3 w-3" />
+                                </button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-60 p-2">
+                               <div className="space-y-2">
+                                    <p className="font-medium text-sm">Add/Remove Tags</p>
+                                    <div className="flex flex-col gap-1">
+                                        {tags.map(tag => (
+                                            <button 
+                                                key={tag.id}
+                                                onClick={() => handleToggleTag(tag.id)}
+                                                className="flex items-center gap-2 p-1.5 rounded-md text-sm hover:bg-muted w-full text-left"
+                                            >
+                                                <div className="w-4">
+                                                    {task.tagIds.includes(tag.id) && <CheckIcon className="h-4 w-4" />}
+                                                </div>
+                                                <span>#{tag.label}</span>
+                                            </button>
+                                        ))}
+                                    </div>
+                               </div>
+                            </PopoverContent>
+                        </Popover>
+                    </div>
                 </div>
             </div>
             <div className="flex items-center">
