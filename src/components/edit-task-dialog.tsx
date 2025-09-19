@@ -178,7 +178,7 @@ export function EditTaskDialog({ open, onOpenChange, task }: EditTaskDialogProps
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)}>
-          <ScrollArea className="max-h-[60vh] p-1 pr-6">
+           <ScrollArea className="max-h-[60vh] p-1 pr-6">
             <div className="space-y-4 p-1">
               <div className="space-y-2">
                 <Input id="title" {...register('title')} placeholder="e.g. Finalize presentation" className="text-base" />

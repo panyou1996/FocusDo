@@ -117,7 +117,8 @@ export function TaskItem({ item, viewMode = 'detailed', index, isDragDisabled = 
     dispatch({ type: 'UPDATE_TASK', payload: { ...task, subtasks: updatedSubtasks, completed: allSubtasksCompleted } });
   };
 
-  const toggleMyDay = () => {
+  const toggleMyDay = (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (!task) return;
     const updatedTask = { ...task, isMyDay: !task.isMyDay };
     if (!updatedTask.isMyDay) {
@@ -131,13 +132,15 @@ export function TaskItem({ item, viewMode = 'detailed', index, isDragDisabled = 
     dispatch({ type: 'UPDATE_TASK', payload: { ...task, dueDate: date?.toISOString() } });
   }
 
-  const handleRemoveTag = (tagId: string) => {
+  const handleRemoveTag = (e: React.MouseEvent, tagId: string) => {
+    e.stopPropagation();
     if (!task) return;
     const newTagIds = task.tagIds.filter(id => id !== tagId);
     dispatch({ type: 'UPDATE_TASK', payload: { ...task, tagIds: newTagIds } });
   }
 
-  const handleToggleTag = (tagId: string) => {
+  const handleToggleTag = (e: React.MouseEvent, tagId: string) => {
+    e.stopPropagation();
     if (!task) return;
     const newTagIds = task.tagIds.includes(tagId)
       ? task.tagIds.filter(id => id !== tagId)
@@ -145,9 +148,16 @@ export function TaskItem({ item, viewMode = 'detailed', index, isDragDisabled = 
     dispatch({ type: 'UPDATE_TASK', payload: { ...task, tagIds: newTagIds } });
   };
 
-  const toggleImportant = () => {
+  const toggleImportant = (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (!task) return;
     dispatch({ type: 'UPDATE_TASK', payload: { ...task, isImportant: !task.isImportant } });
+  };
+
+  const openEditDialog = () => {
+    if (isTask) {
+        setIsEditDialogOpen(true);
+    }
   };
 
 
@@ -202,17 +212,17 @@ export function TaskItem({ item, viewMode = 'detailed', index, isDragDisabled = 
             onCheckedChange={handleCheckedChange}
             className="h-5 w-5 rounded-full mt-0.5 border-primary"
             aria-label={`Mark task "${task.title}" as ${task.completed ? 'incomplete' : 'complete'}`}
+            data-interactive="true"
+            onClick={(e) => e.stopPropagation()}
           />
-          <div className="flex-1" onClick={(e) => {
-            if ((e.target as HTMLElement).closest('[data-interactive="true"]')) return;
-            setIsEditDialogOpen(true);
-          }}>
+          <div className="flex-1" onClick={openEditDialog}>
             <label
               htmlFor={`task-${task.id}`}
               className={cn(
                 'font-medium cursor-pointer',
                 task.completed && 'line-through text-muted-foreground'
               )}
+              onClick={(e) => e.stopPropagation()} // Prevent label click from triggering parent onClick
             >
               {task.title}
             </label>
@@ -224,6 +234,7 @@ export function TaskItem({ item, viewMode = 'detailed', index, isDragDisabled = 
                 <PopoverTrigger asChild>
                   <button
                     data-interactive="true"
+                    onClick={(e) => e.stopPropagation()}
                     className={cn("flex items-center gap-1.5 font-semibold rounded-md -ml-1 px-1 py-0.5 hover:bg-muted",
                       dueDateLabel && task.dueDate && isToday(parseISO(task.dueDate)) ? "text-primary" : ""
                     )}>
@@ -231,7 +242,7 @@ export function TaskItem({ item, viewMode = 'detailed', index, isDragDisabled = 
                     {dueDateLabel || <span>Set due date</span>}
                   </button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
+                <PopoverContent className="w-auto p-0" onClick={(e) => e.stopPropagation()}>
                   <CalendarPicker
                     mode="single"
                     selected={task.dueDate ? parseISO(task.dueDate) : undefined}
@@ -246,7 +257,7 @@ export function TaskItem({ item, viewMode = 'detailed', index, isDragDisabled = 
                 </PopoverContent>
               </Popover>
 
-              <div data-interactive="true" className="flex items-center gap-1.5 font-semibold rounded-md px-1 py-0.5">
+              <div data-interactive="true" onClick={(e) => e.stopPropagation()} className="flex items-center gap-1.5 font-semibold rounded-md px-1 py-0.5">
                 <Clock className="h-3 w-3" />
                 {task.duration ? `${task.duration} min` : 'Set duration'}
               </div>
@@ -259,7 +270,7 @@ export function TaskItem({ item, viewMode = 'detailed', index, isDragDisabled = 
                       key={tag.id}
                       variant="outline"
                       className="text-xs font-normal group/tag relative pr-1.5 cursor-pointer"
-                      onClick={() => handleRemoveTag(tag.id)}
+                      onClick={(e) => handleRemoveTag(e, tag.id)}
                     >
                       #{tag.label}
                       <span className="absolute -right-1 -top-1 hidden group-hover/tag:flex items-center justify-center w-3.5 h-3.5 bg-background border rounded-full">
@@ -270,18 +281,18 @@ export function TaskItem({ item, viewMode = 'detailed', index, isDragDisabled = 
                 </div>
                 <Popover>
                   <PopoverTrigger asChild>
-                    <button className="flex items-center justify-center w-5 h-5 rounded-full hover:bg-muted">
+                    <button onClick={(e) => e.stopPropagation()} className="flex items-center justify-center w-5 h-5 rounded-full hover:bg-muted">
                       <Plus className="h-3 w-3" />
                     </button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-60 p-2">
+                  <PopoverContent className="w-60 p-2" onClick={(e) => e.stopPropagation()}>
                     <div className="space-y-2">
                       <p className="font-medium text-sm">Add/Remove Tags</p>
                       <div className="flex flex-col gap-1">
                         {tags.map(tag => (
                           <button
                             key={tag.id}
-                            onClick={() => handleToggleTag(tag.id)}
+                            onClick={(e) => handleToggleTag(e, tag.id)}
                             className="flex items-center gap-2 p-1.5 rounded-md text-sm hover:bg-muted w-full text-left"
                           >
                             <div className="w-4">
@@ -339,30 +350,29 @@ export function TaskItem({ item, viewMode = 'detailed', index, isDragDisabled = 
           isTask && 'border',
           task?.completed && 'bg-card/60 dark:bg-card/40 opacity-60'
         )}
+        onClick={openEditDialog}
       >
         { !isDragDisabled && provided?.dragHandleProps ? (
-          <div {...provided.dragHandleProps} className="cursor-grab" data-interactive="true">
+          <div {...provided.dragHandleProps} className="cursor-grab" data-interactive="true" onClick={(e) => e.stopPropagation()}>
             <GripVertical className="h-4 w-4 text-muted-foreground" />
           </div>
         ) : <div className="w-4" />}
 
         {isTask ? (
            <Checkbox
-              id={`task-${item.id}`}
+              id={`task-compact-${item.id}`}
               checked={task!.completed}
               onCheckedChange={handleCheckedChange}
               className="h-5 w-5 rounded-full border-primary"
               aria-label={`Mark task "${task!.title}" as ${task!.completed ? 'incomplete' : 'complete'}`}
+              data-interactive="true"
+              onClick={(e) => e.stopPropagation()}
             />
         ): (
           EventIcon && <EventIcon className="h-5 w-5 text-muted-foreground flex-shrink-0" />
         )}
         
-        <div className="flex-1" onClick={(e) => {
-            if (isTask && !(e.target as HTMLElement).closest('[data-interactive="true"]')) {
-                setIsEditDialogOpen(true);
-            }
-        }}>
+        <div className="flex-1">
             <p className={cn('font-medium', task?.completed && 'line-through text-muted-foreground')}>
               {item.title}
             </p>
@@ -391,7 +401,10 @@ export function TaskItem({ item, viewMode = 'detailed', index, isDragDisabled = 
   return (
     <Draggable draggableId={item.id} index={index} isDragDisabled={isDragDisabled || (viewMode === 'detailed' && !isTask)}>
       {(provided) => (
-        viewMode === 'detailed' ? renderDetailedView(provided) : renderCompactView(provided)
+        <>
+          {viewMode === 'detailed' ? renderDetailedView(provided) : renderCompactView(provided)}
+          {task && <EditTaskDialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen} task={task} />}
+        </>
       )}
     </Draggable>
   );
