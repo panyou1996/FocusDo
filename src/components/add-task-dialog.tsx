@@ -182,13 +182,50 @@ export function AddTaskDialog({ open, onOpenChange, defaultListId }: AddTaskDial
         <form onSubmit={handleSubmit(onSubmit)} className="flex-1 flex flex-col min-h-0">
             <ScrollArea className="flex-1 -mx-6 px-6">
                 <div className="space-y-4 pt-2 pb-6">
-                <div className="space-y-2">
-                    <Input id="title" {...register('title')} placeholder="e.g. Finalize presentation" className="text-base" />
-                    {errors.title && <p className="text-sm text-destructive">{errors.title.message}</p>}
-                    <Textarea id="description" {...register('description')} placeholder="Add more details..." />
-                </div>
+                    <div className="space-y-2">
+                        <Input id="title" {...register('title')} placeholder="e.g. Finalize presentation" className="text-base" />
+                        {errors.title && <p className="text-sm text-destructive">{errors.title.message}</p>}
+                        <Textarea id="description" {...register('description')} placeholder="Add more details..." />
+                    </div>
 
-                <div className="flex items-center space-x-4">
+                    <div>
+                        <div className="flex items-center gap-2 mb-2">
+                            <CheckSquare className="h-4 w-4 text-muted-foreground" />
+                            <h4 className="text-sm font-medium">Subtasks</h4>
+                        </div>
+                        <div className="space-y-2">
+                            <ScrollArea className="max-h-28">
+                                <div className="space-y-2 pr-4">
+                                    {fields.map((field, index) => (
+                                        <div key={field.id} className="flex items-center gap-2">
+                                        <Checkbox checked={field.completed} disabled />
+                                        <Input {...register(`subtasks.${index}.title`)} className="h-8" />
+                                        <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)} className="h-8 w-8">
+                                            <Trash2 className="h-4 w-4 text-destructive" />
+                                        </Button>
+                                        </div>
+                                    ))}
+                                </div>
+                            </ScrollArea>
+                            <div className="flex items-center gap-2 pt-2">
+                                <Input
+                                    value={newSubtask}
+                                    onChange={(e) => setNewSubtask(e.target.value)}
+                                    placeholder="Add a new subtask..."
+                                    className="h-8"
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                            e.preventDefault();
+                                            handleAddSubtask();
+                                        }
+                                    }}
+                                />
+                                <Button type="button" size="sm" onClick={handleAddSubtask}>Add</Button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center space-x-4">
                         <Controller
                             name="isMyDay"
                             control={control}
@@ -263,140 +300,103 @@ export function AddTaskDialog({ open, onOpenChange, defaultListId }: AddTaskDial
                         )}
                     </div>
 
-                <div className="grid grid-cols-2 gap-2">
-                    <Controller
-                        name="duration"
-                        control={control}
-                        render={({ field: { onChange, ...field } }) => (
-                            <div className="relative">
-                                <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                <Input 
-                                    type="number"
-                                    placeholder="Duration (mins)"
-                                    className="pl-9"
-                                    onChange={e => onChange(e.target.value === '' ? undefined : +e.target.value)}
-                                    {...field}
-                                />
-                            </div>
-                        )}
-                    />
-                    <Controller
-                    name="listId"
-                    control={control}
-                    render={({ field }) => (
-                        <Select onValueChange={field.onChange} value={field.value}>
-                        <SelectTrigger className="w-full h-9 px-3">
-                            <div className="flex items-center gap-2">
-                                <List className="h-4 w-4" />
-                                <SelectValue placeholder="Select a list" />
-                            </div>
-                        </SelectTrigger>
-                        <SelectContent>
-                            {regularLists.map((list) => (
-                            <SelectItem key={list.id} value={list.id}>
-                                {list.title}
-                            </SelectItem>
-                            ))}
-                        </SelectContent>
-                        </Select>
-                    )}
-                    />
-                </div>
-                {errors.listId && <p className="text-sm text-destructive">{errors.listId.message}</p>}
-                {errors.duration && <p className="text-sm text-destructive">{errors.duration.message}</p>}
-
-
-                <div>
-                    <div className="flex items-center gap-2 mb-2">
-                        <Tag className="h-4 w-4 text-muted-foreground" />
-                        <h4 className="text-sm font-medium">Tags</h4>
-                    </div>
-                    <Controller
-                        name="tagIds"
+                    <div className="grid grid-cols-2 gap-2">
+                        <Controller
+                            name="duration"
+                            control={control}
+                            render={({ field: { onChange, ...field } }) => (
+                                <div className="relative">
+                                    <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                    <Input 
+                                        type="number"
+                                        placeholder="Duration (mins)"
+                                        className="pl-9"
+                                        onChange={e => onChange(e.target.value === '' ? undefined : +e.target.value)}
+                                        {...field}
+                                    />
+                                </div>
+                            )}
+                        />
+                        <Controller
+                        name="listId"
                         control={control}
                         render={({ field }) => (
-                            <div className="flex flex-wrap gap-2">
-                            {tags.map(tag => (
-                                <button
-                                    type="button"
-                                    key={tag.id}
-                                    onClick={() => {
-                                        const newValue = selectedTags.includes(tag.id)
-                                        ? selectedTags.filter(id => id !== tag.id)
-                                        : [...selectedTags, tag.id];
-                                        field.onChange(newValue);
-                                    }}
-                                    className={cn(
-                                        "flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium border transition-colors",
-                                        selectedTags.includes(tag.id)
-                                        ? 'bg-muted border-transparent'
-                                        : 'bg-transparent text-muted-foreground hover:bg-muted border-dashed'
-                                    )}
-                                >
-                                {selectedTags.includes(tag.id) && <Check className="h-3 w-3" />}
-                                #{tag.label}
-                                </button>
-                            ))}
-                            <Popover open={isAddTagPopoverOpen} onOpenChange={setIsAddTagPopoverOpen}>
-                                <PopoverTrigger asChild>
-                                <Button type="button" variant="outline" size="sm" className="h-auto py-1 text-xs">
-                                        <Plus className="mr-1 h-3 w-3" />
-                                        New Tag
-                                    </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-60">
-                                    <div className="space-y-4">
-                                        <h4 className="font-medium leading-none">Create a new tag</h4>
-                                        <Input 
-                                            placeholder="Tag name" 
-                                            value={newTagName} 
-                                            onChange={(e) => setNewTagName(e.target.value)}
-                                        />
-                                        <Button onClick={handleAddNewTag} className="w-full">Create</Button>
-                                    </div>
-                                </PopoverContent>
-                            </Popover>
-                            </div>
-                        )}
-                    />
-                </div>
-
-                <div>
-                    <div className="flex items-center gap-2 mb-2">
-                        <CheckSquare className="h-4 w-4 text-muted-foreground" />
-                        <h4 className="text-sm font-medium">Subtasks</h4>
-                    </div>
-                    <div className="space-y-2 rounded-md border p-4">
-                        <ScrollArea className="max-h-28">
-                            <div className="space-y-2 pr-4">
-                                {fields.map((field, index) => (
-                                    <div key={field.id} className="flex items-center gap-2">
-                                    <Checkbox checked={field.completed} disabled />
-                                    <Input {...register(`subtasks.${index}.title`)} className="h-8" />
-                                    <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)} className="h-8 w-8">
-                                        <Trash2 className="h-4 w-4 text-destructive" />
-                                    </Button>
-                                    </div>
+                            <Select onValueChange={field.onChange} value={field.value}>
+                            <SelectTrigger className="w-full h-9 px-3">
+                                <div className="flex items-center gap-2">
+                                    <List className="h-4 w-4" />
+                                    <SelectValue placeholder="Select a list" />
+                                </div>
+                            </SelectTrigger>
+                            <SelectContent>
+                                {regularLists.map((list) => (
+                                <SelectItem key={list.id} value={list.id}>
+                                    {list.title}
+                                </SelectItem>
                                 ))}
-                            </div>
-                        </ScrollArea>
-                        <div className="flex items-center gap-2 pt-2">
-                            <Input
-                                value={newSubtask}
-                                onChange={(e) => setNewSubtask(e.target.value)}
-                                placeholder="Add a new subtask..."
-                                className="h-8"
-                                onKeyDown={(e) => {
-                                    if (e.key === 'Enter') {
-                                        e.preventDefault();
-                                        handleAddSubtask();
-                                    }
-                                }}
-                            />
-                            <Button type="button" size="sm" onClick={handleAddSubtask}>Add</Button>
-                        </div>
+                            </SelectContent>
+                            </Select>
+                        )}
+                        />
                     </div>
-                </div>
+                    {errors.listId && <p className="text-sm text-destructive">{errors.listId.message}</p>}
+                    {errors.duration && <p className="text-sm text-destructive">{errors.duration.message}</p>}
+
+
+                    <div>
+                        <div className="flex items-center gap-2 mb-2">
+                            <Tag className="h-4 w-4 text-muted-foreground" />
+                            <h4 className="text-sm font-medium">Tags</h4>
+                        </div>
+                        <Controller
+                            name="tagIds"
+                            control={control}
+                            render={({ field }) => (
+                                <div className="flex flex-wrap gap-2">
+                                {tags.map(tag => (
+                                    <button
+                                        type="button"
+                                        key={tag.id}
+                                        onClick={() => {
+                                            const newValue = selectedTags.includes(tag.id)
+                                            ? selectedTags.filter(id => id !== tag.id)
+                                            : [...selectedTags, tag.id];
+                                            field.onChange(newValue);
+                                        }}
+                                        className={cn(
+                                            "flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium border transition-colors",
+                                            selectedTags.includes(tag.id)
+                                            ? 'bg-muted border-transparent'
+                                            : 'bg-transparent text-muted-foreground hover:bg-muted border-dashed'
+                                        )}
+                                    >
+                                    {selectedTags.includes(tag.id) && <Check className="h-3 w-3" />}
+                                    #{tag.label}
+                                    </button>
+                                ))}
+                                <Popover open={isAddTagPopoverOpen} onOpenChange={setIsAddTagPopoverOpen}>
+                                    <PopoverTrigger asChild>
+                                    <Button type="button" variant="outline" size="sm" className="h-auto py-1 text-xs">
+                                            <Plus className="mr-1 h-3 w-3" />
+                                            New Tag
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-60">
+                                        <div className="space-y-4">
+                                            <h4 className="font-medium leading-none">Create a new tag</h4>
+                                            <Input 
+                                                placeholder="Tag name" 
+                                                value={newTagName} 
+                                                onChange={(e) => setNewTagName(e.target.value)}
+                                            />
+                                            <Button onClick={handleAddNewTag} className="w-full">Create</Button>
+                                        </div>
+                                    </PopoverContent>
+                                </Popover>
+                                </div>
+                            )}
+                        />
+                    </div>
                 </div>
             </ScrollArea>
             <DialogFooter className="pt-4 -mx-6 px-6 pb-6 border-t">
@@ -411,3 +411,5 @@ export function AddTaskDialog({ open, onOpenChange, defaultListId }: AddTaskDial
     </Dialog>
   );
 }
+
+    
