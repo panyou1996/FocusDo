@@ -161,6 +161,7 @@ export function EditTaskDialog({ open, onOpenChange, task }: EditTaskDialogProps
       const newTag: TagType = {
         id: newTagName.trim().toLowerCase().replace(/\s+/g, '-'),
         label: newTagName.trim(),
+        color: 'gray'
       };
       dispatch({ type: 'ADD_TAG', payload: newTag });
       setNewTagName('');
@@ -250,10 +251,10 @@ export function EditTaskDialog({ open, onOpenChange, task }: EditTaskDialogProps
                 control={control}
                 render={({field}) => (
                     <Input 
-                        type="time"
+                        type="text"
                         className="h-9"
+                        placeholder="HH:MM"
                         {...field}
-                        step="900"
                     />
                 )}
             />
@@ -413,6 +414,8 @@ export function EditTaskDialog({ open, onOpenChange, task }: EditTaskDialogProps
     </Dialog>
   );
 }
+
+    
 
     
 
