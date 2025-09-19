@@ -61,6 +61,7 @@ export function TaskItem({ task, variant = 'default' }: TaskItemProps) {
       date.setHours(0, 0, 0, 0);
       dispatch({ type: 'UPDATE_TASK', payload: { ...task, dueDate: date.toISOString() } });
     }
+    setIsTimePopoverOpen(false);
   };
 
   const handleDateChange = (date: Date | undefined) => {
@@ -134,7 +135,8 @@ export function TaskItem({ task, variant = 'default' }: TaskItemProps) {
                     <PopoverContent className="w-48 p-2">
                        <div className="flex gap-2">
                          <Input 
-                            type="time"
+                            type="text"
+                            placeholder="HH:MM"
                             defaultValue={hasTime ? format(parseISO(task.dueDate!), 'HH:mm') : ''}
                             onBlur={handleTimeChange}
                          />
@@ -248,7 +250,7 @@ export function TaskItem({ task, variant = 'default' }: TaskItemProps) {
                                 onSelect={handleDateChange}
                             />
                             <div className="p-2 border-t">
-                                <Button variant="ghost" size="sm" className="w-full justify-start" onClick={(e) => { e.stopPropagation(); handleDateChange(undefined) }}>
+                                <Button data-interactive="true" variant="ghost" size="sm" className="w-full justify-start" onClick={(e) => { e.stopPropagation(); handleDateChange(undefined) }}>
                                     <X className="mr-2 h-4 w-4"/>
                                     Remove due date
                                 </Button>
@@ -325,5 +327,7 @@ export function TaskItem({ task, variant = 'default' }: TaskItemProps) {
     
 
       
+
+    
 
     
