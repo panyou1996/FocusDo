@@ -180,7 +180,7 @@ export function AddTaskDialog({ open, onOpenChange, defaultListId }: AddTaskDial
   };
 
 
-  const regularLists = lists.filter(l => !['my-day', 'important'].includes(l.id));
+  const regularLists = lists.filter(l => !['my-day', 'important', 'tasks'].includes(l.id));
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -338,8 +338,8 @@ export function AddTaskDialog({ open, onOpenChange, defaultListId }: AddTaskDial
                             className={cn(
                                 "flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium border transition-colors",
                                 selectedTags.includes(tag.id)
-                                ? getTagColorClasses(tag.color) + ' border-transparent'
-                                : 'bg-transparent text-muted-foreground hover:bg-muted'
+                                ? cn(getTagColorClasses(tag.color), 'border-transparent')
+                                : 'bg-transparent text-muted-foreground hover:bg-muted border-dashed'
                             )}
                         >
                         {selectedTags.includes(tag.id) && <Check className="h-3 w-3" />}
@@ -432,5 +432,3 @@ export function AddTaskDialog({ open, onOpenChange, defaultListId }: AddTaskDial
     </Dialog>
   );
 }
-
-    
