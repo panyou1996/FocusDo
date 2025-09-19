@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Lightbulb, Plus, Sparkles, Calendar, GripVertical } from 'lucide-react';
 import { TaskList } from './task-list';
 import { Skeleton } from './ui/skeleton';
-import { format, parseISO } from 'date-fns';
+import { format, parseISO, isToday } from 'date-fns';
 
 export function MyDayView() {
   const { tasks } = useTasks();
@@ -45,7 +45,7 @@ export function MyDayView() {
 
   const myDayTasks = useMemo(() => {
     return tasks
-      .filter((task) => task.listId === 'my-day')
+      .filter((task) => task.listId === 'my-day' && task.dueDate && isToday(parseISO(task.dueDate)))
       .sort((a, b) => {
         if (a.completed && !b.completed) return 1;
         if (!a.completed && b.completed) return -1;
