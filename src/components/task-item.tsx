@@ -7,7 +7,7 @@ import { cn, getListColorClasses } from '@/lib/utils';
 import { format, isToday, isTomorrow, parseISO } from 'date-fns';
 import { Badge } from './ui/badge';
 import { Progress } from './ui/progress';
-import { Clock, Sun, X, Calendar, GripVertical, Star, CalendarDays, Tag, Plus, Check as CheckIcon } from 'lucide-react';
+import { Clock, Sun, X, Calendar, GripVertical, Star, CalendarDays, Tag, Plus, Check as CheckIcon, Sparkles } from 'lucide-react';
 import { Button } from './ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { useMemo, useState } from 'react';
@@ -15,6 +15,8 @@ import { Input } from './ui/input';
 import { EditTaskDialog } from './edit-task-dialog';
 import { Calendar as CalendarPicker } from './ui/calendar';
 import { Draggable } from 'react-beautiful-dnd';
+import { useToast } from '@/hooks/use-toast';
+import { scheduleMyDayTasks } from '@/ai/flows/schedule-my-day-flow';
 
 interface TaskItemProps {
   task: Task;
@@ -33,13 +35,74 @@ const TimeBadge = ({ date }: { date: string }) => {
 
 
 export function TaskItem({ task, variant = 'default', index, isDragDisabled = false }: TaskItemProps) {
-  const { lists, tags } = useTasks();
+  const { lists, tags, tasks } = useTasks();
   const dispatch = useTasksDispatch();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const { toast } = useToast();
 
+  const handleAiSchedule = async () => {
+    const userSchedule = localStorage.getItem('userSchedule') || 'Works from 8:30 to 11:30, breaks for lunch, works again from 13:00 to 17:30, breaks for dinner, and is free from 18:30 to 22:00.';
+    const myDayTasks = tasks.filter((task) => task.isMyDay && !task.completed);
+    
+    toast({ title: '🤖 Optimizing your remaining day...', description: 'The AI is working its magic.' });
+    
+    const tasksToSchedule = myDayTasks.filter(t => t.id !== task.id);
+    
+    try {
+      const input = {
+        userSchedule: userSchedule,
+        tasks: tasksToSchedule.map(t => ({
+          id: t.id,
+          title: t.title,
+          duration: t.duration,
+          isImportant: t.isImportant,
+          dueDate: t.dueDate,
+        })),
+        currentDate: new Date().toISOString(),
+      };
+
+      const result = await scheduleMyDayTasks(input);
+      
+      result.scheduledTasks.forEach(scheduledTask => {
+        const originalTask = tasks.find(t => t.id === scheduledTask.id);
+        if (originalTask) {
+          const updatedTask: Task = {
+            ...originalTask,
+            startTime: scheduledTask.startTime,
+          };
+          dispatch({ type: 'UPDATE_TASK', payload: updatedTask });
+        }
+      });
+
+      toast({ 
+        title: '✅ Schedule Optimized!', 
+        description: 'Your remaining tasks have been rescheduled.',
+      });
+    } catch (error) {
+      console.error('Failed to schedule tasks:', error);
+      toast({ variant: 'destructive', title: 'Scheduling failed', description: 'The AI could not optimize your schedule.' });
+    }
+  };
 
   const handleCheckedChange = (checked: boolean) => {
-    dispatch({ type: 'UPDATE_TASK', payload: { ...task, completed: checked } });
+    const updatedTask = { ...task, completed: checked };
+    dispatch({ type: 'UPDATE_TASK', payload: updatedTask });
+    
+    if (checked && task.isMyDay && task.startTime && task.duration) {
+      const remainingTasks = tasks.filter(t => t.isMyDay && !t.completed && t.id !== task.id && t.startTime);
+      if (remainingTasks.length > 0) {
+        toast({
+          title: 'Task Completed!',
+          description: 'Want to optimize the rest of your day?',
+          action: (
+            <Button variant="outline" size="sm" onClick={handleAiSchedule}>
+              <Sparkles className="mr-2 h-4 w-4" />
+              Optimize Schedule
+            </Button>
+          )
+        });
+      }
+    }
   };
   
   const handleSubtaskCheckedChange = (subtaskId: string, checked: boolean) => {
@@ -232,20 +295,22 @@ export function TaskItem({ task, variant = 'default', index, isDragDisabled = fa
                     </Popover>
 
                     <div data-interactive="true" className="flex items-center gap-1.5 rounded-md px-1 py-0.5">
-                        <Tag className="h-3 w-3" />
-                        {taskTags.map((tag) => (
-                            <Badge 
-                                key={tag.id} 
-                                variant="outline" 
-                                className="text-xs font-normal group/tag relative pr-1.5 cursor-pointer"
-                                onClick={() => handleRemoveTag(tag.id)}
-                            >
-                                #{tag.label}
-                                <span className="absolute -right-1 -top-1 hidden group-hover/tag:flex items-center justify-center w-3.5 h-3.5 bg-background border rounded-full">
-                                    <X className="w-2.5 h-2.5" />
-                                </span>
-                            </Badge>
-                        ))}
+                         <div className="flex items-center gap-1.5">
+                            <Tag className="h-3 w-3" />
+                            {taskTags.map((tag) => (
+                                <Badge 
+                                    key={tag.id} 
+                                    variant="outline" 
+                                    className="text-xs font-normal group/tag relative pr-1.5 cursor-pointer"
+                                    onClick={() => handleRemoveTag(tag.id)}
+                                >
+                                    #{tag.label}
+                                    <span className="absolute -right-1 -top-1 hidden group-hover/tag:flex items-center justify-center w-3.5 h-3.5 bg-background border rounded-full">
+                                        <X className="w-2.5 h-2.5" />
+                                    </span>
+                                </Badge>
+                            ))}
+                         </div>
                          <Popover>
                             <PopoverTrigger asChild>
                                 <button className="flex items-center justify-center w-5 h-5 rounded-full hover:bg-muted">
@@ -369,3 +434,5 @@ export function TaskItem({ task, variant = 'default', index, isDragDisabled = fa
     </>
   );
 }
+
+    
