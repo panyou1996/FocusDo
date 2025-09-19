@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -258,6 +259,7 @@ export function AddTaskDialog({ open, onOpenChange, defaultListId }: AddTaskDial
                         type="time"
                         className="h-9"
                         {...field}
+                        step="900"
                     />
                 )}
             />
@@ -408,5 +410,7 @@ export function AddTaskDialog({ open, onOpenChange, defaultListId }: AddTaskDial
     </Dialog>
   );
 }
+
+    
 
     

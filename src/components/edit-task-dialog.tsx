@@ -253,6 +253,7 @@ export function EditTaskDialog({ open, onOpenChange, task }: EditTaskDialogProps
                         type="time"
                         className="h-9"
                         {...field}
+                        step="900"
                     />
                 )}
             />
@@ -412,5 +413,7 @@ export function EditTaskDialog({ open, onOpenChange, task }: EditTaskDialogProps
     </Dialog>
   );
 }
+
+    
 
     
