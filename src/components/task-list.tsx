@@ -1,20 +1,22 @@
 
 'use client';
 
-import type { Task } from '@/lib/types';
+import type { Task, CalendarEvent } from '@/lib/types';
 import { TaskItem } from './task-item';
 import { Droppable } from 'react-beautiful-dnd';
 
+type Item = (Task & { type: 'task' }) | (CalendarEvent & { type: 'event' });
+
 interface TaskListProps {
-  tasks: Task[];
+  items: Item[];
   variant?: 'default' | 'my-day';
   droppableId: string;
   isDropDisabled?: boolean;
 }
 
-export function TaskList({ tasks, variant = 'default', droppableId, isDropDisabled = false }: TaskListProps) {
+export function TaskList({ items, variant = 'default', droppableId, isDropDisabled = false }: TaskListProps) {
 
-  if (tasks.length === 0 && droppableId !== 'completed-tasks') {
+  if (items.length === 0 && droppableId !== 'completed-tasks') {
       return (
          <div className="text-center py-10 border-2 border-dashed rounded-lg">
             <p className="text-muted-foreground">No tasks here. Looks like a clean slate!</p>
@@ -30,13 +32,13 @@ export function TaskList({ tasks, variant = 'default', droppableId, isDropDisabl
           {...provided.droppableProps} 
           className="space-y-2"
         >
-          {tasks.map((task, index) => (
+          {items.map((item, index) => (
             <TaskItem 
-              key={task.id} 
-              task={task} 
+              key={item.id} 
+              item={item} 
               variant={variant} 
               index={index} 
-              isDragDisabled={isDropDisabled || task.completed}
+              isDragDisabled={isDropDisabled || (item.type === 'task' && item.completed) || item.type === 'event' }
             />
           ))}
           {provided.placeholder}
@@ -45,5 +47,3 @@ export function TaskList({ tasks, variant = 'default', droppableId, isDropDisabl
     </Droppable>
   );
 }
-
-    

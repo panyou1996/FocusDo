@@ -1,13 +1,13 @@
 
 'use client';
-import type { Task } from '@/lib/types';
+import type { Task, CalendarEvent } from '@/lib/types';
 import { useTasks, useTasksDispatch } from '@/hooks/use-tasks';
 import { Checkbox } from './ui/checkbox';
 import { cn, getListColorClasses } from '@/lib/utils';
 import { format, isToday, isTomorrow, parseISO } from 'date-fns';
 import { Badge } from './ui/badge';
 import { Progress } from './ui/progress';
-import { Clock, Sun, X, Calendar, GripVertical, Star, CalendarDays, Tag, Plus, Check as CheckIcon, Sparkles } from 'lucide-react';
+import { Clock, Sun, X, Calendar, GripVertical, Star, CalendarDays, Tag, Plus, Check as CheckIcon, Sparkles, Briefcase, Video } from 'lucide-react';
 import { Button } from './ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { useMemo, useState } from 'react';
@@ -18,22 +18,30 @@ import { Draggable } from 'react-beautiful-dnd';
 import { useToast } from '@/hooks/use-toast';
 import { scheduleMyDayTasks } from '@/ai/flows/schedule-my-day-flow';
 
+type Item = (Task & { type: 'task' }) | (CalendarEvent & { type: 'event' });
+
+
 interface TaskItemProps {
-  task: Task;
+  item: Item;
   variant?: 'default' | 'my-day';
   index?: number;
   isDragDisabled?: boolean;
 }
 
-export function TaskItem({ task, variant = 'default', index, isDragDisabled = false }: TaskItemProps) {
+export function TaskItem({ item, variant = 'default', index, isDragDisabled = false }: TaskItemProps) {
   const { lists, tags, tasks, events } = useTasks();
   const dispatch = useTasksDispatch();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const { toast } = useToast();
 
+  const isTask = item.type === 'task';
+  const task = isTask ? item : null;
+
+
   const handleAiSchedule = async () => {
+    if (!task) return;
     const userSchedule = localStorage.getItem('userSchedule') || 'Works from 8:30 to 11:30, breaks for lunch, works again from 13:00 to 17:30, breaks for dinner, and is free from 18:30 to 22:00.';
-    const myDayTasks = tasks.filter((task) => task.isMyDay && !task.completed);
+    const myDayTasks = tasks.filter((t) => t.isMyDay && !t.completed);
     const todayEvents = events.filter(event => isToday(parseISO(event.startTime)));
     
     toast({ title: '🤖 Optimizing your remaining day...', description: 'The AI is working its magic.' });
@@ -82,6 +90,7 @@ export function TaskItem({ task, variant = 'default', index, isDragDisabled = fa
   };
 
   const handleCheckedChange = (checked: boolean) => {
+    if (!task) return;
     const updatedTask = { ...task, completed: checked };
     dispatch({ type: 'UPDATE_TASK', payload: updatedTask });
     
@@ -103,12 +112,14 @@ export function TaskItem({ task, variant = 'default', index, isDragDisabled = fa
   };
   
   const handleSubtaskCheckedChange = (subtaskId: string, checked: boolean) => {
+    if (!task) return;
     const updatedSubtasks = task.subtasks.map(st => st.id === subtaskId ? {...st, completed: checked} : st);
     const allSubtasksCompleted = updatedSubtasks.every(st => st.completed);
     dispatch({ type: 'UPDATE_TASK', payload: { ...task, subtasks: updatedSubtasks, completed: allSubtasksCompleted } });
   };
 
   const toggleMyDay = () => {
+    if (!task) return;
     const updatedTask = { ...task, isMyDay: !task.isMyDay };
     if (!updatedTask.isMyDay) {
         updatedTask.startTime = undefined; // Remove start time if removed from My Day
@@ -117,6 +128,7 @@ export function TaskItem({ task, variant = 'default', index, isDragDisabled = fa
   };
 
   const handleStartTimeChange = (e: React.FocusEvent<HTMLInputElement>) => {
+    if (!task) return;
     const time = e.target.value;
     if (time.match(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/)) {
         const date = task.startTime ? parseISO(task.startTime) : new Date();
@@ -130,20 +142,24 @@ export function TaskItem({ task, variant = 'default', index, isDragDisabled = fa
   };
 
   const handleDateChange = (date: Date | undefined) => {
+    if (!task) return;
     dispatch({ type: 'UPDATE_TASK', payload: { ...task, dueDate: date?.toISOString() } });
   }
 
   const handleDurationChange = (e: React.FocusEvent<HTMLInputElement>) => {
+    if (!task) return;
     const duration = e.target.value ? parseInt(e.target.value) : undefined;
     dispatch({ type: 'UPDATE_TASK', payload: { ...task, duration: duration } });
   }
 
   const handleRemoveTag = (tagId: string) => {
+    if (!task) return;
     const newTagIds = task.tagIds.filter(id => id !== tagId);
     dispatch({ type: 'UPDATE_TASK', payload: { ...task, tagIds: newTagIds } });
   }
 
   const handleToggleTag = (tagId: string) => {
+    if (!task) return;
     const newTagIds = task.tagIds.includes(tagId)
       ? task.tagIds.filter(id => id !== tagId)
       : [...task.tagIds, tagId];
@@ -151,26 +167,55 @@ export function TaskItem({ task, variant = 'default', index, isDragDisabled = fa
   };
 
   const toggleImportant = () => {
+    if (!task) return;
     dispatch({ type: 'UPDATE_TASK', payload: { ...task, isImportant: !task.isImportant } });
   };
 
 
   const getTaskTags = () => {
+    if (!task) return [];
     return tags.filter(tag => task.tagIds.includes(tag.id));
   };
   
   const getTaskList = useMemo(() => {
+    if (!task) return undefined;
     return lists.find(list => list.id === task.listId);
-  }, [task.listId, lists]);
+  }, [task, lists]);
 
   const getDueDateLabel = () => {
-    if (!task.dueDate) return null;
+    if (!task || !task.dueDate) return null;
     const date = parseISO(task.dueDate);
     if (isToday(date)) return "Today";
     if (isTomorrow(date)) return "Tomorrow";
     return format(date, 'MMM d');
   };
 
+  if (!isTask) { // Render Calendar Event
+    const event = item as CalendarEvent;
+    const eventColorClass = event.calendarId === 'work' ? 'border-blue-500' : 'border-green-500';
+    const EventIcon = event.calendarId === 'work' ? Briefcase : Video;
+
+    return (
+       <div
+        className={cn(
+          'group relative flex items-center gap-3 rounded-lg border-l-4 bg-card p-3 shadow-sm',
+          eventColorClass
+        )}
+      >
+        <div className="grid h-8 w-8 flex-shrink-0 place-items-center rounded-full bg-muted">
+          <EventIcon className="h-4 w-4 text-muted-foreground" />
+        </div>
+        <div className="flex-1">
+          <p className="font-medium">{event.title}</p>
+          <p className="text-sm text-muted-foreground">
+            {format(parseISO(event.startTime), 'HH:mm')} - {format(parseISO(event.endTime), 'HH:mm')}
+          </p>
+        </div>
+      </div>
+    )
+  }
+
+  // From here, we are rendering a Task
   const dueDateLabel = getDueDateLabel();
   const completedSubtasks = task.subtasks?.filter(st => st.completed).length || 0;
   const totalSubtasks = task.subtasks?.length || 0;
@@ -372,11 +417,11 @@ export function TaskItem({ task, variant = 'default', index, isDragDisabled = fa
                   data-interactive="true" 
                   className={cn(
                     'flex items-center justify-center rounded-md w-20 h-8 text-sm font-semibold cursor-pointer',
-                    task.startTime ? 'bg-muted' : 'border-2 border-dashed text-muted-foreground hover:bg-muted'
+                    item.startTime ? 'bg-muted' : 'border-2 border-dashed text-muted-foreground hover:bg-muted'
                   )}
                 >
-                    {task.startTime ? (
-                        <span>{format(parseISO(task.startTime), 'HH:mm')}</span>
+                    {item.startTime ? (
+                        <span>{format(parseISO(item.startTime), 'HH:mm')}</span>
                     ) : (
                         <div className="flex items-center gap-1.5">
                             <Clock className="h-3.5 w-3.5" />
@@ -390,8 +435,9 @@ export function TaskItem({ task, variant = 'default', index, isDragDisabled = fa
                     <Input 
                         type="text"
                         placeholder="HH:MM"
-                        defaultValue={task.startTime ? format(parseISO(task.startTime), 'HH:mm') : ''}
+                        defaultValue={task?.startTime ? format(parseISO(task.startTime), 'HH:mm') : ''}
                         onBlur={handleStartTimeChange}
+                        disabled={!isTask}
                     />
                 </div>
             </PopoverContent>
@@ -399,7 +445,7 @@ export function TaskItem({ task, variant = 'default', index, isDragDisabled = fa
     );
 
     return (
-      <Draggable draggableId={task.id} index={index!} isDragDisabled={isDragDisabled || task.completed}>
+      <Draggable draggableId={item.id} index={index!} isDragDisabled={isDragDisabled || !isTask || task.completed}>
         {(provided) => (
           <div
             className="flex items-center gap-4"
@@ -417,7 +463,7 @@ export function TaskItem({ task, variant = 'default', index, isDragDisabled = fa
   };
 
   const renderDefaultItem = () => (
-    <Draggable draggableId={task.id} index={index!} isDragDisabled={isDragDisabled}>
+    <Draggable draggableId={item.id} index={index!} isDragDisabled={isDragDisabled || !isTask}>
       {(provided) => (
         renderCard(provided)
       )}
@@ -427,9 +473,7 @@ export function TaskItem({ task, variant = 'default', index, isDragDisabled = fa
   return (
     <>
       {variant === 'my-day' && index !== undefined ? renderMyDayItem() : renderCard()}
-      <EditTaskDialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen} task={task} />
+      {isTask && <EditTaskDialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen} task={task} />}
     </>
   );
 }
-
-    
