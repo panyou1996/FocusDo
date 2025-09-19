@@ -6,7 +6,7 @@ import type { Task } from '@/lib/types';
 import { useEffect, useState, useMemo } from 'react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-import { Lightbulb, Plus, Sparkles, Calendar, GripVertical } from 'lucide-react';
+import { Lightbulb, Plus, Sparkles, Calendar } from 'lucide-react';
 import { TaskList } from './task-list';
 import { Skeleton } from './ui/skeleton';
 import { format, parseISO, isToday } from 'date-fns';
@@ -45,7 +45,7 @@ export function MyDayView() {
 
   const myDayTasks = useMemo(() => {
     return tasks
-      .filter((task) => task.listId === 'my-day' && task.dueDate && isToday(parseISO(task.dueDate)))
+      .filter((task) => task.listId === 'my-day' && (!task.dueDate || isToday(parseISO(task.dueDate))))
       .sort((a, b) => {
         if (a.completed && !b.completed) return 1;
         if (!a.completed && b.completed) return -1;
@@ -67,7 +67,11 @@ export function MyDayView() {
   }, [tasks]);
 
   const handleAddTaskToMyDay = (task: Task) => {
-    dispatch({ type: 'UPDATE_TASK', payload: { ...task, listId: 'my-day' } });
+    const updatedTask = { ...task, listId: 'my-day' };
+    if (!updatedTask.dueDate) {
+        updatedTask.dueDate = new Date().toISOString();
+    }
+    dispatch({ type: 'UPDATE_TASK', payload: updatedTask });
     setRecommendedTasks(prev => prev.filter(t => t.id !== task.id));
   };
 
@@ -88,7 +92,7 @@ export function MyDayView() {
                 All-day
             </h3>
             <div className="space-y-2">
-                <TaskList tasks={allDayTasks} variant="default" />
+                <TaskList tasks={allDayTasks} variant="my-day" />
             </div>
           </div>
         )}

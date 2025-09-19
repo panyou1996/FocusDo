@@ -39,8 +39,12 @@ export function TaskItem({ task, variant = 'default' }: TaskItemProps) {
       // Remove from My Day, move to 'tasks' list
       dispatch({ type: 'UPDATE_TASK', payload: { ...task, listId: 'tasks' } });
     } else {
-      // Add to My Day
-      dispatch({ type: 'UPDATE_TASK', payload: { ...task, listId: 'my-day' } });
+      // Add to My Day, ensuring it has a date
+      const updatedTask = { ...task, listId: 'my-day' };
+      if (!updatedTask.dueDate) {
+        updatedTask.dueDate = new Date().toISOString();
+      }
+      dispatch({ type: 'UPDATE_TASK', payload: updatedTask });
     }
   };
 
@@ -52,6 +56,14 @@ export function TaskItem({ task, variant = 'default' }: TaskItemProps) {
       date.setMinutes(parseInt(minutes, 10));
       dispatch({ type: 'UPDATE_TASK', payload: { ...task, dueDate: date.toISOString() } });
       setIsTimePopoverOpen(false); // Close popover after setting time
+    } else if (!task.dueDate && newTime) {
+      // if task has no due date, set it to today with new time
+      const date = new Date();
+      const [hours, minutes] = newTime.split(':');
+      date.setHours(parseInt(hours, 10));
+      date.setMinutes(parseInt(minutes, 10));
+      dispatch({ type: 'UPDATE_TASK', payload: { ...task, dueDate: date.toISOString() } });
+      setIsTimePopoverOpen(false);
     }
   };
 
@@ -80,28 +92,24 @@ export function TaskItem({ task, variant = 'default' }: TaskItemProps) {
      return (
         <div className={cn('group relative flex items-start gap-4 rounded-lg p-4 transition-colors hover:bg-muted/50', task.completed && 'opacity-60')}>
             {/* Time and Date Section */}
-            <div className="flex-shrink-0 text-right">
-                {hasTime ? (
-                    <Popover open={isTimePopoverOpen} onOpenChange={setIsTimePopoverOpen}>
-                        <PopoverTrigger asChild>
-                            <button className="text-lg font-bold focus:outline-none focus:ring-2 focus:ring-ring rounded-md px-1 -mx-1">
-                                {format(parseISO(task.dueDate!), 'HH:mm')}
-                            </button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-48 p-2">
-                           <div className="flex gap-2">
-                             <Input 
-                                type="time"
-                                value={newTime}
-                                onChange={(e) => setNewTime(e.target.value)}
-                             />
-                             <Button size="sm" onClick={handleTimeChange}>Set</Button>
-                           </div>
-                        </PopoverContent>
-                    </Popover>
-                ) : (
-                    <div className="w-12"></div>
-                )}
+            <div className="flex-shrink-0 text-right w-14">
+                <Popover open={isTimePopoverOpen} onOpenChange={setIsTimePopoverOpen}>
+                    <PopoverTrigger asChild>
+                        <button className="text-lg font-bold focus:outline-none focus:ring-2 focus:ring-ring rounded-md px-1 -mx-1 h-7">
+                            {hasTime ? format(parseISO(task.dueDate!), 'HH:mm') : <Clock className="h-4 w-4 text-muted-foreground" />}
+                        </button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-48 p-2">
+                       <div className="flex gap-2">
+                         <Input 
+                            type="time"
+                            value={newTime}
+                            onChange={(e) => setNewTime(e.target.value)}
+                         />
+                         <Button size="sm" onClick={handleTimeChange}>Set</Button>
+                       </div>
+                    </PopoverContent>
+                </Popover>
                 {task.dueDate && (
                     <p className="text-xs text-muted-foreground">{format(parseISO(task.dueDate), 'MMM d')}</p>
                 )}
@@ -111,7 +119,7 @@ export function TaskItem({ task, variant = 'default' }: TaskItemProps) {
             <div className="h-full border-l"></div>
 
              {/* Task Details Section */}
-             <div className="flex-grow space-y-1">
+             <div className="flex-grow space-y-1 pt-1">
                 <p className={cn('font-medium', task.completed && 'line-through text-muted-foreground')}>{task.title}</p>
                 {task.description && (
                   <p className="text-sm text-muted-foreground">{task.description}</p>
@@ -184,7 +192,7 @@ export function TaskItem({ task, variant = 'default' }: TaskItemProps) {
                              task.dueDate && isToday(parseISO(task.dueDate)) ? "text-primary" : ""
                         )}>
                             <Calendar className="h-3 w-3" />
-                            {dueDateLabel} {hasTime && format(parseISO(task.dueDate), 'HH:mm')}
+                            {dueDateLabel} {hasTime && format(parseISO(task.dueDate!), 'HH:mm')}
                         </span>
                     )}
                     {task.duration && (
