@@ -14,10 +14,13 @@ import { useMemo, useState } from 'react';
 import { Input } from './ui/input';
 import { EditTaskDialog } from './edit-task-dialog';
 import { Calendar as CalendarPicker } from './ui/calendar';
+import { Draggable } from 'react-beautiful-dnd';
 
 interface TaskItemProps {
   task: Task;
   variant?: 'default' | 'my-day';
+  index?: number;
+  isDragDisabled?: boolean;
 }
 
 const TimeBadge = ({ date }: { date: string }) => {
@@ -29,7 +32,7 @@ const TimeBadge = ({ date }: { date: string }) => {
 };
 
 
-export function TaskItem({ task, variant = 'default' }: TaskItemProps) {
+export function TaskItem({ task, variant = 'default', index, isDragDisabled = false }: TaskItemProps) {
   const { lists, tags } = useTasks();
   const dispatch = useTasksDispatch();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -115,8 +118,10 @@ export function TaskItem({ task, variant = 'default' }: TaskItemProps) {
   const taskTags = getTaskTags();
   const taskList = getTaskList;
   
-  const renderCard = () => (
+  const renderCard = (provided?: any) => (
     <div
+      ref={provided?.innerRef}
+      {...provided?.draggableProps}
       className={cn(
         'group relative flex flex-col gap-2 rounded-lg border bg-card shadow-sm transition-all hover:shadow-md animate-in fade-in-50 p-3',
         getListColorClasses(taskList?.color),
@@ -124,6 +129,11 @@ export function TaskItem({ task, variant = 'default' }: TaskItemProps) {
       )}
     >
         <div className="flex items-start gap-3">
+             {variant === 'my-day' && !isDragDisabled ? (
+                <div {...provided.dragHandleProps} className="mt-1 cursor-grab" data-interactive="true">
+                    <GripVertical className="h-4 w-4 text-muted-foreground" />
+                </div>
+            ) : <div className="w-4" />}
              <Checkbox
                 id={`task-${task.id}`}
                 checked={task.completed}
@@ -132,7 +142,6 @@ export function TaskItem({ task, variant = 'default' }: TaskItemProps) {
                 aria-label={`Mark task "${task.title}" as ${task.completed ? 'incomplete' : 'complete'}`}
             />
             <div className="flex-1" onClick={(e) => {
-                // Prevent opening edit dialog when clicking on interactive elements
                 if ((e.target as HTMLElement).closest('[data-interactive="true"]')) return;
                 setIsEditDialogOpen(true);
             }}>
@@ -287,7 +296,6 @@ export function TaskItem({ task, variant = 'default' }: TaskItemProps) {
                 <div className="space-y-1 text-sm text-muted-foreground">
                     {completedSubtasks} of {totalSubtasks} completed
                 </div>
-                {/* Collapsible subtasks could be an option here if needed */}
             </div>
         )}
     </div>
@@ -329,16 +337,34 @@ export function TaskItem({ task, variant = 'default' }: TaskItemProps) {
     );
 
     return (
-      <div className="flex items-center gap-4">
-        {timeComponent}
-        <div className="flex-1">{renderCard()}</div>
-      </div>
+      <Draggable draggableId={task.id} index={index!} isDragDisabled={isDragDisabled || task.completed}>
+        {(provided) => (
+          <div
+            className="flex items-center gap-4"
+            ref={provided.innerRef}
+            {...provided.draggableProps}
+          >
+            {timeComponent}
+            <div className="flex-1">
+              {renderCard(provided)}
+            </div>
+          </div>
+        )}
+      </Draggable>
     );
   };
+
+  const renderDefaultItem = () => (
+    <Draggable draggableId={task.id} index={index!} isDragDisabled={isDragDisabled}>
+      {(provided) => (
+        renderCard(provided)
+      )}
+    </Draggable>
+  )
   
   return (
     <>
-      {variant === 'my-day' ? renderMyDayItem() : renderCard()}
+      {variant === 'my-day' && index !== undefined ? renderMyDayItem() : renderCard()}
       <EditTaskDialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen} task={task} />
     </>
   );
