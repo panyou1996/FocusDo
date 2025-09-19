@@ -1,3 +1,4 @@
+
 import type { Task, List, Tag, CalendarEvent } from '@/lib/types';
 import { addDays, subDays, set } from 'date-fns';
 
@@ -9,7 +10,7 @@ export const initialLists: List[] = [
   { id: 'tasks', title: 'Tasks', icon: 'Home', color: 'gray' },
   { id: 'work', title: 'Work', icon: 'Briefcase', color: 'blue' },
   { id: 'personal', title: 'Personal', icon: 'User', color: 'green' },
-  { id: 'groceries', title: 'Grocery Shopping', icon: 'ShoppingCart', color: 'orange' },
+  { id: 'groceries', title: 'Grocery Shopping', icon: 'ShoppingCart', color: 'pink' },
 ];
 
 export const initialTags: Tag[] = [
@@ -109,7 +110,7 @@ export const initialTasks: Task[] = [
     isImportant: false,
     startTime: new Date(new Date().setHours(9, 0, 0, 0)).toISOString(),
     duration: 15,
-    listId: 'tasks',
+    listId: 'groceries',
     tagIds: ['home', 'quick-task'],
     subtasks: [
       { id: 'SUB-001', title: 'Check soil moisture', completed: true },

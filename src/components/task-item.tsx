@@ -3,11 +3,11 @@
 import type { Task, CalendarEvent } from '@/lib/types';
 import { useTasks, useTasksDispatch } from '@/hooks/use-tasks';
 import { Checkbox } from './ui/checkbox';
-import { cn, getListColorClasses, getBorderColorClasses } from '@/lib/utils';
+import { cn, getBorderColorClasses } from '@/lib/utils';
 import { format, isToday, isTomorrow, parseISO, addMinutes } from 'date-fns';
 import { Badge } from './ui/badge';
 import { Progress } from './ui/progress';
-import { Clock, Sun, X, CalendarDays, GripVertical, Star, Tag, Plus, Check as CheckIcon, Sparkles, Briefcase, Video } from 'lucide-react';
+import { Clock, Sun, X, CalendarDays, GripVertical, Star, Tag, Plus, Check as CheckIcon, Sparkles, Briefcase, Video, PlusCircle, CheckSquare } from 'lucide-react';
 import { Button } from './ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { useMemo, useState } from 'react';
@@ -200,8 +200,8 @@ export function TaskItem({ item, viewMode = 'detailed', index, isDragDisabled = 
         ref={provided?.innerRef}
         {...provided?.draggableProps}
         className={cn(
-          'group relative flex flex-col gap-2 rounded-lg border bg-card shadow-sm transition-all hover:shadow-md animate-in fade-in-50 p-3',
-          getListColorClasses(taskList?.color),
+          'group relative flex flex-col gap-2 rounded-lg border bg-card shadow-sm transition-all hover:shadow-md animate-in fade-in-50 p-3 border-l-4',
+          getBorderColorClasses(taskList?.color),
           task.completed && 'bg-card/60 dark:bg-card/40 opacity-60'
         )}
         onClick={openEditDialog}
@@ -353,7 +353,7 @@ export function TaskItem({ item, viewMode = 'detailed', index, isDragDisabled = 
     let ItemIcon;
 
     if (isTask) {
-        ItemIcon = Lucide[taskList?.icon as keyof typeof Lucide] || Lucide.List;
+        ItemIcon = (taskList && Lucide[taskList.icon as keyof typeof Lucide]) || Lucide.List;
     } else {
         ItemIcon = event?.calendarId === 'work' ? Briefcase : Video;
     }
