@@ -15,6 +15,7 @@ type Action =
   | { type: 'UPDATE_TASK'; payload: Task }
   | { type: 'DELETE_TASK'; payload: string }
   | { type: 'ADD_TAG'; payload: Tag }
+  | { type: 'ADD_LIST'; payload: List }
   | { type: 'SET_STATE'; payload: AppState };
 
 const AppStateContext = createContext<AppState | undefined>(undefined);
@@ -42,6 +43,11 @@ const appReducer = (state: AppState, action: Action): AppState => {
             return state;
         }
         return { ...state, tags: [...state.tags, action.payload] };
+    case 'ADD_LIST':
+        if (state.lists.some(list => list.id === action.payload.id)) {
+            return state;
+        }
+        return { ...state, lists: [...state.lists, action.payload] };
     case 'SET_STATE':
         return action.payload;
     default:
@@ -97,5 +103,3 @@ export const useTasksDispatch = () => {
   }
   return dispatch;
 };
-
-    
