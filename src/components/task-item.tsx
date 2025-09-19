@@ -215,23 +215,26 @@ export function TaskItem({ task, variant = 'default' }: TaskItemProps) {
                         </PopoverContent>
                     </Popover>
 
-                    <div data-interactive="true" className="flex items-center gap-1">
-                        <Tag className="h-3 w-3"/>
-                        {taskTags.map((tag) => (
-                            <Badge 
-                                key={tag.id} 
-                                variant="outline" 
-                                className="text-xs font-normal group/tag relative pr-5 cursor-pointer hover:border-destructive"
-                                onClick={() => handleRemoveTag(tag.id)}
-                            >
-                                #{tag.label}
-                                <span className="absolute right-1 top-1/2 -translate-y-1/2 hidden group-hover/tag:inline">
-                                    <X className="h-3 w-3" />
-                                </span>
-                            </Badge>
-                        ))}
-                        {taskTags.length === 0 && <span className="font-semibold text-muted-foreground">Add tag</span>}
-                    </div>
+                    <Popover>
+                        <PopoverTrigger asChild>
+                            <div data-interactive="true" className="flex items-center gap-1.5 font-semibold rounded-md px-1 py-0.5 hover:bg-muted cursor-pointer">
+                                <Tag className="h-3 w-3" />
+                                {taskTags.map((tag) => (
+                                    <Badge 
+                                        key={tag.id} 
+                                        variant="outline" 
+                                        className="text-xs font-normal group/tag relative pr-1.5"
+                                    >
+                                        #{tag.label}
+                                    </Badge>
+                                ))}
+                                {taskTags.length === 0 && <span className="font-semibold text-muted-foreground">Add tag</span>}
+                            </div>
+                        </PopoverTrigger>
+                         <PopoverContent className="w-60 p-2">
+                           ...
+                        </PopoverContent>
+                    </Popover>
                 </div>
             </div>
             <div className="flex items-center">
