@@ -4,9 +4,6 @@
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from './ui/button';
@@ -28,7 +25,7 @@ import { Calendar as CalendarIcon, List, Plus, Tag, Trash2, Clock, CheckSquare, 
 import { Calendar } from './ui/calendar';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
-import { cn } from '@/lib/utils';
+import { cn, listColorMap } from '@/lib/utils';
 import React, { useState } from 'react';
 import { Checkbox } from './ui/checkbox';
 import { ScrollArea } from './ui/scroll-area';
@@ -91,6 +88,7 @@ export function AddTaskDialog({ open, onOpenChange, defaultListId }: AddTaskDial
   } = form;
   
   const isMyDay = watch('isMyDay');
+  const selectedListId = watch('listId');
 
   const { fields, append, remove } = useFieldArray({
     control,
@@ -98,6 +96,8 @@ export function AddTaskDialog({ open, onOpenChange, defaultListId }: AddTaskDial
   });
 
   const selectedTags = watch('tagIds') || [];
+  
+  const selectedList = lists.find(l => l.id === selectedListId);
 
   const onSubmit = (data: TaskFormValues) => {
     let startTime: string | undefined = undefined;
@@ -173,12 +173,6 @@ export function AddTaskDialog({ open, onOpenChange, defaultListId }: AddTaskDial
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-2xl max-h-[85vh] flex flex-col">
-        <DialogHeader>
-          <DialogTitle>Add a new task</DialogTitle>
-          <DialogDescription>
-              What needs to get done?
-          </DialogDescription>
-        </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="flex-1 flex flex-col min-h-0">
             <ScrollArea className="flex-1">
                 <div className="space-y-4 pt-2 pb-6 px-1">
@@ -220,7 +214,7 @@ export function AddTaskDialog({ open, onOpenChange, defaultListId }: AddTaskDial
                                     <div className="flex items-center space-x-2">
                                         <Switch id="isImportant" checked={field.value} onCheckedChange={field.onChange} />
                                         <Label htmlFor="isImportant" className="flex items-center gap-2 cursor-pointer">
-                                            <Star className="h-4 w-4 text-gray-500" />
+                                            <Star className="h-4 w-4 text-muted-foreground" />
                                             Mark as Important
                                         </Label>
                                     </div>
@@ -291,33 +285,38 @@ export function AddTaskDialog({ open, onOpenChange, defaultListId }: AddTaskDial
                                     </div>
                                 )}
                             />
-                            <Controller
-                            name="listId"
-                            control={control}
-                            render={({ field }) => (
+                             <Controller
+                                name="listId"
+                                control={control}
+                                render={({ field }) => (
                                 <Select onValueChange={field.onChange} value={field.value}>
-                                <SelectTrigger className="w-full h-9 px-3">
-                                    <div className="flex items-center gap-2">
-                                        <List className="h-4 w-4" />
-                                        <SelectValue placeholder="Select a list" />
-                                    </div>
-                                </SelectTrigger>
-                                <SelectContent>
+                                    <SelectTrigger className="w-full h-9 px-3">
+                                        <div className="flex items-center gap-2">
+                                            {selectedList?.color && (
+                                                <div className={cn("h-2.5 w-2.5 rounded-full", listColorMap[selectedList.color])} />
+                                            )}
+                                            <SelectValue placeholder="Select a list" />
+                                        </div>
+                                    </SelectTrigger>
+                                    <SelectContent>
                                     {regularLists.map((list) => (
-                                    <SelectItem key={list.id} value={list.id}>
-                                        {list.title}
-                                    </SelectItem>
+                                        <SelectItem key={list.id} value={list.id}>
+                                            <div className="flex items-center gap-2">
+                                                <div className={cn("h-2.5 w-2.5 rounded-full", listColorMap[list.color || 'gray'])} />
+                                                <span>{list.title}</span>
+                                            </div>
+                                        </SelectItem>
                                     ))}
-                                </SelectContent>
+                                    </SelectContent>
                                 </Select>
-                            )}
+                                )}
                             />
                         </div>
                         {errors.listId && <p className="text-sm text-destructive">{errors.listId.message}</p>}
                         {errors.duration && <p className="text-sm text-destructive">{errors.duration.message}</p>}
                         
                         <div className="space-y-2">
-                            <div className="flex items-center gap-2">
+                             <div className="flex items-center gap-2">
                                 <Tag className="h-4 w-4 text-muted-foreground" />
                                 <h4 className="text-sm font-medium">Tags</h4>
                             </div>
@@ -371,7 +370,7 @@ export function AddTaskDialog({ open, onOpenChange, defaultListId }: AddTaskDial
                             />
                         </div>
 
-                        <div className="space-y-3">
+                         <div className="space-y-3">
                             <div className="flex items-center gap-2">
                                 <CheckSquare className="h-4 w-4 text-muted-foreground" />
                                 <h4 className="text-sm font-medium">Subtasks</h4>
@@ -420,3 +419,5 @@ export function AddTaskDialog({ open, onOpenChange, defaultListId }: AddTaskDial
     </Dialog>
   );
 }
+
+    

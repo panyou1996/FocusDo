@@ -25,7 +25,7 @@ import { Calendar as CalendarIcon, List, Plus, Tag, Trash2, X, Clock, CheckSquar
 import { Calendar } from './ui/calendar';
 import { format, parseISO } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
-import { cn } from '@/lib/utils';
+import { cn, listColorMap } from '@/lib/utils';
 import React, { useState, useEffect } from 'react';
 import { Checkbox } from './ui/checkbox';
 import { ScrollArea } from './ui/scroll-area';
@@ -82,6 +82,7 @@ export function EditTaskDialog({ open, onOpenChange, task }: EditTaskDialogProps
   } = form;
 
   const isMyDay = watch('isMyDay');
+  const selectedListId = watch('listId');
 
   useEffect(() => {
     if (task && open) {
@@ -107,6 +108,7 @@ export function EditTaskDialog({ open, onOpenChange, task }: EditTaskDialogProps
   });
 
   const selectedTags = watch('tagIds') || [];
+  const selectedList = lists.find(l => l.id === selectedListId);
 
   const onSubmit = (data: TaskFormValues) => {
     let startTime: string | undefined = undefined;
@@ -188,49 +190,6 @@ export function EditTaskDialog({ open, onOpenChange, task }: EditTaskDialogProps
                     </div>
                     
                     <div className="space-y-4 px-1">
-                         <div className="space-y-3">
-                            <div className="flex items-center gap-2">
-                                <CheckSquare className="h-4 w-4 text-muted-foreground" />
-                                <h4 className="text-sm font-medium">Subtasks</h4>
-                            </div>
-                            <div className="space-y-2">
-                                {fields.map((field, index) => (
-                                    <div key={field.id} className="flex items-center gap-2">
-                                    <Controller
-                                        name={`subtasks.${index}.completed`}
-                                        control={control}
-                                        render={({ field: checkboxField }) => (
-                                        <Checkbox
-                                            checked={checkboxField.value}
-                                            onCheckedChange={checkboxField.onChange}
-                                            />
-                                        )}
-                                    />
-                                    <Input {...register(`subtasks.${index}.title`)} className="h-8" />
-                                    <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)} className="h-8 w-8 flex-shrink-0">
-                                        <Trash2 className="h-4 w-4 text-destructive" />
-                                    </Button>
-                                    </div>
-                                ))}
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <Input
-                                    value={newSubtask}
-                                    onChange={(e) => setNewSubtask(e.target.value)}
-                                    placeholder="Add a new subtask..."
-                                    className="h-8"
-                                    onKeyDown={(e) => {
-                                        if (e.key === 'Enter') {
-                                            e.preventDefault();
-                                            handleAddSubtask();
-                                        }
-                                    }}
-                                />
-                                <Button type="button" size="icon" variant="ghost" onClick={handleAddSubtask} className="h-8 w-8 flex-shrink-0">
-                                    <PlusCircle className="h-4 w-4" />
-                                </Button>
-                            </div>
-                        </div>
 
                         <div className="flex items-center space-x-4">
                             <Controller
@@ -253,7 +212,7 @@ export function EditTaskDialog({ open, onOpenChange, task }: EditTaskDialogProps
                                     <div className="flex items-center space-x-2">
                                         <Switch id="isImportant-edit" checked={field.value} onCheckedChange={field.onChange} />
                                         <Label htmlFor="isImportant-edit" className="flex items-center gap-2 cursor-pointer">
-                                            <Star className="h-4 w-4 text-gray-500" />
+                                            <Star className="h-4 w-4 text-muted-foreground" />
                                             Mark as Important
                                         </Label>
                                     </div>
@@ -331,14 +290,19 @@ export function EditTaskDialog({ open, onOpenChange, task }: EditTaskDialogProps
                                     <Select onValueChange={field.onChange} value={field.value}>
                                     <SelectTrigger className="w-full h-9 px-3">
                                         <div className="flex items-center gap-2">
-                                            <List className="h-4 w-4" />
+                                             {selectedList?.color && (
+                                                <div className={cn("h-2.5 w-2.5 rounded-full", listColorMap[selectedList.color])} />
+                                            )}
                                             <SelectValue placeholder="Select a list" />
                                         </div>
                                     </SelectTrigger>
                                     <SelectContent>
                                         {regularLists.map((list) => (
                                         <SelectItem key={list.id} value={list.id}>
-                                            {list.title}
+                                           <div className="flex items-center gap-2">
+                                                <div className={cn("h-2.5 w-2.5 rounded-full", listColorMap[list.color || 'gray'])} />
+                                                <span>{list.title}</span>
+                                            </div>
                                         </SelectItem>
                                         ))}
                                     </SelectContent>
@@ -350,7 +314,7 @@ export function EditTaskDialog({ open, onOpenChange, task }: EditTaskDialogProps
                         {errors.duration && <p className="text-sm text-destructive">{errors.duration.message}</p>}
                         
                         <div className="space-y-2">
-                            <div className="flex items-center gap-2">
+                             <div className="flex items-center gap-2">
                                 <Tag className="h-4 w-4 text-muted-foreground" />
                                 <h4 className="text-sm font-medium">Tags</h4>
                             </div>
@@ -403,6 +367,49 @@ export function EditTaskDialog({ open, onOpenChange, task }: EditTaskDialogProps
                                 )}
                             />
                         </div>
+                        <div className="space-y-3">
+                            <div className="flex items-center gap-2">
+                                <CheckSquare className="h-4 w-4 text-muted-foreground" />
+                                <h4 className="text-sm font-medium">Subtasks</h4>
+                            </div>
+                            <div className="space-y-2">
+                                {fields.map((field, index) => (
+                                    <div key={field.id} className="flex items-center gap-2">
+                                    <Controller
+                                        name={`subtasks.${index}.completed`}
+                                        control={control}
+                                        render={({ field: checkboxField }) => (
+                                        <Checkbox
+                                            checked={checkboxField.value}
+                                            onCheckedChange={checkboxField.onChange}
+                                            />
+                                        )}
+                                    />
+                                    <Input {...register(`subtasks.${index}.title`)} className="h-8" />
+                                    <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)} className="h-8 w-8 flex-shrink-0">
+                                        <Trash2 className="h-4 w-4 text-destructive" />
+                                    </Button>
+                                    </div>
+                                ))}
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <Input
+                                    value={newSubtask}
+                                    onChange={(e) => setNewSubtask(e.target.value)}
+                                    placeholder="Add a new subtask..."
+                                    className="h-8"
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                            e.preventDefault();
+                                            handleAddSubtask();
+                                        }
+                                    }}
+                                />
+                                <Button type="button" size="icon" variant="ghost" onClick={handleAddSubtask} className="h-8 w-8 flex-shrink-0">
+                                    <PlusCircle className="h-4 w-4" />
+                                </Button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </ScrollArea>
@@ -418,3 +425,5 @@ export function EditTaskDialog({ open, onOpenChange, task }: EditTaskDialogProps
     </Dialog>
   );
 }
+
+    
