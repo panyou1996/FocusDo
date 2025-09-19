@@ -1,13 +1,10 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { Button } from './ui/button';
 import { SidebarTrigger } from './ui/sidebar';
 import { useTasks } from '@/hooks/use-tasks';
-import { Plus } from 'lucide-react';
-import { useState } from 'react';
 
-export function AppHeader({ onNewTaskClick }: { onNewTaskClick: () => void }) {
+export function AppHeader() {
   const pathname = usePathname();
   const { lists } = useTasks();
 
@@ -33,10 +30,6 @@ export function AppHeader({ onNewTaskClick }: { onNewTaskClick: () => void }) {
         <SidebarTrigger className="md:hidden" />
         <h1 className="text-xl font-bold">{getTitle()}</h1>
       </div>
-      <Button onClick={onNewTaskClick}>
-        <Plus className="-ml-1 h-5 w-5" />
-        New Task
-      </Button>
     </header>
   );
 }
