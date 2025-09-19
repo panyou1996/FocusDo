@@ -171,15 +171,15 @@ export function EditTaskDialog({ open, onOpenChange, task }: EditTaskDialogProps
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg max-h-[85vh] flex flex-col">
-        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col h-full">
-            <DialogHeader>
-            <DialogTitle>Edit task</DialogTitle>
-            <DialogDescription>
-                Make changes to your task here. Click save when you're done.
-            </DialogDescription>
-            </DialogHeader>
-            <ScrollArea className="flex-1 my-4 pr-6 -mr-6">
-                <div className="space-y-4 pr-1 pb-6">
+        <DialogHeader>
+          <DialogTitle>Edit task</DialogTitle>
+          <DialogDescription>
+              Make changes to your task here. Click save when you're done.
+          </DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleSubmit(onSubmit)} className="flex-1 flex flex-col min-h-0">
+            <ScrollArea className="flex-1 -mx-6 px-6">
+                <div className="space-y-4 pt-2 pb-6">
                 <div className="space-y-2">
                     <Input id="title" {...register('title')} placeholder="e.g. Finalize presentation" className="text-base" />
                     {errors.title && <p className="text-sm text-destructive">{errors.title.message}</p>}
@@ -406,7 +406,7 @@ export function EditTaskDialog({ open, onOpenChange, task }: EditTaskDialogProps
                 </div>
                 </div>
             </ScrollArea>
-            <DialogFooter className="pt-4">
+            <DialogFooter className="pt-4 -mx-6 px-6 pb-6 border-t">
                 <Button variant="outline" type="button" onClick={() => onOpenChange(false)} disabled={isSubmitting}>Cancel</Button>
                 <Button type="submit" disabled={isSubmitting}>
                     <Save className="mr-2 h-4 w-4" />
