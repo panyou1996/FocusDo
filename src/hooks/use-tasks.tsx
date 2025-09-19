@@ -14,6 +14,7 @@ type Action =
   | { type: 'ADD_TASK'; payload: Task }
   | { type: 'UPDATE_TASK'; payload: Task }
   | { type: 'DELETE_TASK'; payload: string }
+  | { type: 'ADD_TAG'; payload: Tag }
   | { type: 'SET_STATE'; payload: AppState };
 
 const AppStateContext = createContext<AppState | undefined>(undefined);
@@ -35,6 +36,12 @@ const appReducer = (state: AppState, action: Action): AppState => {
         ...state,
         tasks: state.tasks.filter((task) => task.id !== action.payload),
       };
+    case 'ADD_TAG':
+        // Avoid adding duplicate tags
+        if (state.tags.some(tag => tag.id === action.payload.id)) {
+            return state;
+        }
+        return { ...state, tags: [...state.tags, action.payload] };
     case 'SET_STATE':
         return action.payload;
     default:
@@ -90,3 +97,5 @@ export const useTasksDispatch = () => {
   }
   return dispatch;
 };
+
+    

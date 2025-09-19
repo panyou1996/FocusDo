@@ -23,17 +23,17 @@ import {
   SelectValue,
 } from './ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
-import { Calendar as CalendarIcon, List, Plus, Tag, Trash2, X, Clock, CheckSquare, Check, Star, Sun } from 'lucide-react';
+import { Calendar as CalendarIcon, List, Plus, Tag, Trash2, X, Clock, CheckSquare, Check, Star, Sun, Palette } from 'lucide-react';
 import { Calendar } from './ui/calendar';
-import { format, isToday } from 'date-fns';
+import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { cn, getTagColorClasses } from '@/lib/utils';
 import React, { useState } from 'react';
 import { Checkbox } from './ui/checkbox';
-import { Badge } from './ui/badge';
 import { ScrollArea } from './ui/scroll-area';
 import { Switch } from './ui/switch';
 import { Label } from './ui/label';
+import type { Tag as TagType } from '@/lib/types';
 
 const subtaskSchema = z.object({
   title: z.string().min(1, 'Subtask title cannot be empty.'),
@@ -61,11 +61,16 @@ interface AddTaskDialogProps {
   defaultListId?: string;
 }
 
+const availableTagColors: TagType['color'][] = ["red", "orange", "yellow", "green", "blue", "purple", "gray"];
+
 export function AddTaskDialog({ open, onOpenChange, defaultListId }: AddTaskDialogProps) {
   const { lists, tags } = useTasks();
   const dispatch = useTasksDispatch();
   const { toast } = useToast();
   const [newSubtask, setNewSubtask] = useState('');
+  const [isAddTagPopoverOpen, setIsAddTagPopoverOpen] = useState(false);
+  const [newTagName, setNewTagName] = useState('');
+  const [newTagColor, setNewTagColor] = useState<TagType['color']>('gray');
 
   const form = useForm<TaskFormValues>({
     resolver: zodResolver(taskSchema),
@@ -97,8 +102,7 @@ export function AddTaskDialog({ open, onOpenChange, defaultListId }: AddTaskDial
 
   const onSubmit = (data: TaskFormValues) => {
     let dueDate: string | undefined = undefined;
-    let listId = data.listId;
-
+    
     if (data.isMyDay && !data.dueDate) {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
@@ -114,11 +118,6 @@ export function AddTaskDialog({ open, onOpenChange, defaultListId }: AddTaskDial
         }
         dueDate = date.toISOString();
     }
-    
-    if (data.isMyDay) {
-        listId = 'my-day';
-    }
-
 
     const newTask = {
       id: `TASK-${Date.now()}`,
@@ -126,7 +125,7 @@ export function AddTaskDialog({ open, onOpenChange, defaultListId }: AddTaskDial
       description: data.description,
       completed: false,
       isImportant: data.isImportant,
-      listId: listId,
+      listId: data.isMyDay ? 'my-day' : data.listId,
       dueDate: dueDate,
       duration: data.duration,
       tagIds: data.tagIds || [],
@@ -165,6 +164,21 @@ export function AddTaskDialog({ open, onOpenChange, defaultListId }: AddTaskDial
       setNewSubtask('');
     }
   };
+
+  const handleAddNewTag = () => {
+    if (newTagName.trim()) {
+      const newTag: TagType = {
+        id: newTagName.trim().toLowerCase().replace(/\s+/g, '-'),
+        label: newTagName.trim(),
+        color: newTagColor,
+      };
+      dispatch({ type: 'ADD_TAG', payload: newTag });
+      setNewTagName('');
+      setNewTagColor('gray');
+      setIsAddTagPopoverOpen(false);
+    }
+  };
+
 
   const regularLists = lists.filter(l => !['my-day', 'important'].includes(l.id));
 
@@ -279,7 +293,7 @@ export function AddTaskDialog({ open, onOpenChange, defaultListId }: AddTaskDial
               name="listId"
               control={control}
               render={({ field }) => (
-                <Select onValueChange={field.onChange} value={field.value} >
+                <Select onValueChange={field.onChange} value={field.value} disabled={isMyDay}>
                   <SelectTrigger className="w-full h-9 px-3">
                      <div className="flex items-center gap-2">
                         <List className="h-4 w-4" />
@@ -332,6 +346,40 @@ export function AddTaskDialog({ open, onOpenChange, defaultListId }: AddTaskDial
                         #{tag.label}
                         </button>
                     ))}
+                     <Popover open={isAddTagPopoverOpen} onOpenChange={setIsAddTagPopoverOpen}>
+                        <PopoverTrigger asChild>
+                           <Button type="button" variant="outline" size="sm" className="h-auto py-1 text-xs">
+                                <Plus className="mr-1 h-3 w-3" />
+                                New Tag
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-60">
+                            <div className="space-y-4">
+                                <h4 className="font-medium leading-none">Create a new tag</h4>
+                                <Input 
+                                    placeholder="Tag name" 
+                                    value={newTagName} 
+                                    onChange={(e) => setNewTagName(e.target.value)}
+                                />
+                                <div className="flex items-center gap-2">
+                                     <Palette className="h-4 w-4 text-muted-foreground" />
+                                     <div className="flex flex-wrap gap-1">
+                                        {availableTagColors.map(color => (
+                                            <button
+                                                type="button"
+                                                key={color}
+                                                onClick={() => setNewTagColor(color)}
+                                                className={cn("h-6 w-6 rounded-full border-2", getTagColorClasses(color),
+                                                newTagColor === color ? 'border-primary' : 'border-transparent'
+                                                )}
+                                            />
+                                        ))}
+                                    </div>
+                                </div>
+                                <Button onClick={handleAddNewTag} className="w-full">Create</Button>
+                            </div>
+                        </PopoverContent>
+                    </Popover>
                     </div>
                 )}
             />
@@ -384,3 +432,5 @@ export function AddTaskDialog({ open, onOpenChange, defaultListId }: AddTaskDial
     </Dialog>
   );
 }
+
+    
