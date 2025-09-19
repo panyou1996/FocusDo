@@ -23,8 +23,6 @@ interface TaskItemProps {
 export function TaskItem({ task, variant = 'default' }: TaskItemProps) {
   const { lists, tags } = useTasks();
   const dispatch = useTasksDispatch();
-  const [newTime, setNewTime] = useState(task.dueDate ? format(parseISO(task.dueDate), 'HH:mm') : '');
-  const [isTimePopoverOpen, setIsTimePopoverOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
 
@@ -51,17 +49,16 @@ export function TaskItem({ task, variant = 'default' }: TaskItemProps) {
   const handleTimeChange = (e: React.FocusEvent<HTMLInputElement>) => {
     const time = e.target.value;
     const date = task.dueDate ? parseISO(task.dueDate) : new Date();
-    if (time) {
+    if (time.match(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/)) {
       const [hours, minutes] = time.split(':');
       date.setHours(parseInt(hours, 10));
       date.setMinutes(parseInt(minutes, 10));
       dispatch({ type: 'UPDATE_TASK', payload: { ...task, dueDate: date.toISOString() } });
     } else {
-      // If time is cleared, reset to midnight
+      // If time is cleared or invalid, reset to midnight
       date.setHours(0, 0, 0, 0);
       dispatch({ type: 'UPDATE_TASK', payload: { ...task, dueDate: date.toISOString() } });
     }
-    setIsTimePopoverOpen(false);
   };
 
   const handleDateChange = (date: Date | undefined) => {
@@ -121,75 +118,6 @@ export function TaskItem({ task, variant = 'default' }: TaskItemProps) {
 
   const hasTime = task.dueDate && format(parseISO(task.dueDate), 'HH:mm') !== '00:00';
 
-  if (variant === 'my-day' && !task.completed) {
-     return (
-        <div className={cn('group relative flex items-start gap-4 rounded-lg p-4 transition-colors hover:bg-muted/50', task.completed && 'opacity-60')}>
-            {/* Time and Date Section */}
-            <div className="flex-shrink-0 text-right w-14">
-                <Popover open={isTimePopoverOpen} onOpenChange={setIsTimePopoverOpen}>
-                    <PopoverTrigger asChild>
-                        <button className="text-lg font-bold focus:outline-none focus:ring-2 focus:ring-ring rounded-md px-1 -mx-1 h-7">
-                            {hasTime ? format(parseISO(task.dueDate!), 'HH:mm') : <Clock className="h-4 w-4 text-muted-foreground" />}
-                        </button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-48 p-2">
-                       <div className="flex gap-2">
-                         <Input 
-                            type="text"
-                            placeholder="HH:MM"
-                            defaultValue={hasTime ? format(parseISO(task.dueDate!), 'HH:mm') : ''}
-                            onBlur={handleTimeChange}
-                         />
-                       </div>
-                    </PopoverContent>
-                </Popover>
-                {task.dueDate && (
-                    <p className="text-xs text-muted-foreground">{format(parseISO(task.dueDate), 'MMM d')}</p>
-                )}
-            </div>
-
-             {/* Divider */}
-            <div className="h-full border-l"></div>
-
-             {/* Task Details Section */}
-             <div className="flex-grow space-y-1 pt-1" onClick={() => setIsEditDialogOpen(true)}>
-                <p className={cn('font-medium cursor-pointer', task.completed && 'line-through text-muted-foreground')}>{task.title}</p>
-                {task.description && (
-                  <p className="text-sm text-muted-foreground">{task.description}</p>
-                )}
-                <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                    {task.duration && (
-                        <span className="flex items-center gap-1">
-                            <Clock className="h-3.5 w-3.5" />
-                            {task.duration}m
-                        </span>
-                    )}
-                    {taskTags.map(tag => (
-                      <Badge key={tag.id} variant="outline" className="text-xs font-normal border">
-                        #{tag.label}
-                      </Badge>
-                    ))}
-                    {totalSubtasks > 0 && (
-                        <span>{completedSubtasks}/{totalSubtasks}</span>
-                    )}
-                </div>
-             </div>
-
-              {/* Action Buttons */}
-            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                <Button variant="ghost" size="icon" onClick={toggleMyDay} className="h-8 w-8 shrink-0">
-                    <X className="h-4 w-4 text-red-500" />
-                    <span className="sr-only">Remove from My Day</span>
-                </Button>
-                 <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 cursor-grab">
-                    <GripVertical className="h-4 w-4" />
-                </Button>
-            </div>
-            <EditTaskDialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen} task={task} />
-        </div>
-     );
-  }
-
 
   return (
     <>
@@ -236,7 +164,7 @@ export function TaskItem({ task, variant = 'default' }: TaskItemProps) {
                                 <CalendarDays className="h-3 w-3" />
                                 {dueDateLabel ? (
                                     <>
-                                        {dueDateLabel} {hasTime && format(parseISO(task.dueDate!), 'HH:mm')}
+                                        {dueDateLabel}
                                     </>
                                 ) : (
                                     <span>Set due date</span>
@@ -255,6 +183,28 @@ export function TaskItem({ task, variant = 'default' }: TaskItemProps) {
                                     Remove due date
                                 </Button>
                             </div>
+                        </PopoverContent>
+                    </Popover>
+
+                    <Popover>
+                        <PopoverTrigger asChild>
+                            <button
+                                data-interactive="true"
+                                className="flex items-center gap-1.5 font-semibold rounded-md px-1 py-0.5 hover:bg-muted"
+                            >
+                                <Clock className="h-3 w-3" />
+                                {hasTime ? format(parseISO(task.dueDate!), 'HH:mm') : 'Add time'}
+                            </button>
+                        </PopoverTrigger>
+                         <PopoverContent className="w-48 p-2">
+                           <div className="flex gap-2">
+                             <Input 
+                                type="text"
+                                placeholder="HH:MM"
+                                defaultValue={hasTime ? format(parseISO(task.dueDate!), 'HH:mm') : ''}
+                                onBlur={handleTimeChange}
+                             />
+                           </div>
                         </PopoverContent>
                     </Popover>
                     
@@ -323,11 +273,3 @@ export function TaskItem({ task, variant = 'default' }: TaskItemProps) {
     </>
   );
 }
-
-    
-
-      
-
-    
-
-    

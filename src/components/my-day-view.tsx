@@ -2,7 +2,7 @@
 'use client';
 
 import { useTasks } from '@/hooks/use-tasks';
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { TaskList } from './task-list';
 import { format, parseISO } from 'date-fns';
 import { Skeleton } from './ui/skeleton';
@@ -11,8 +11,6 @@ import { Calendar } from 'lucide-react';
 
 export function MyDayView() {
   const { tasks } = useTasks();
-  // isScheduling is now managed in AppHeader
-  const [isScheduling, setIsScheduling] = useState(false); 
 
   const myDayTasks = useMemo(() => {
     // This sorting logic is important and should be preserved.
@@ -43,33 +41,25 @@ export function MyDayView() {
   return (
     <div className="space-y-8">
       <div>
-        {isScheduling && (
+        {tasksWithTime.length > 0 && (
           <div className="space-y-2">
-            <Skeleton className="h-24 w-full" />
-            <Skeleton className="h-16 w-full" />
-            <Skeleton className="h-16 w-full" />
+            <TaskList tasks={tasksWithTime} variant="default" />
           </div>
         )}
 
-        {!isScheduling && tasksWithTime.length > 0 && (
-          <div className="divide-y divide-border rounded-lg border">
-            <TaskList tasks={tasksWithTime} variant="my-day" />
-          </div>
-        )}
-
-        {!isScheduling && allDayTasks.length > 0 && (
+        {allDayTasks.length > 0 && (
           <div className="mt-8">
             <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
                 <Calendar className="h-5 w-5" />
                 All-day / Unscheduled
             </h3>
-            <div className="divide-y divide-border rounded-lg border">
+            <div className="space-y-2">
                 <TaskList tasks={allDayTasks} variant="default" />
             </div>
           </div>
         )}
 
-        {!isScheduling && myDayTasks.length === 0 && (
+        {myDayTasks.length === 0 && (
              <div className="text-center py-10 border-2 border-dashed rounded-lg">
                 <p className="text-muted-foreground">Your day is clear.</p>
                 <p className="text-muted-foreground text-sm">Add tasks from your lists to get started.</p>
