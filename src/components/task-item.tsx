@@ -6,7 +6,8 @@ import { cn, getTagColorClasses, getTagColorName } from '@/lib/utils';
 import { format, isToday, isTomorrow, parseISO } from 'date-fns';
 import { Badge } from './ui/badge';
 import { Progress } from './ui/progress';
-import { Check, Clock } from 'lucide-react';
+import { Check, Clock, Sun, X } from 'lucide-react';
+import { Button } from './ui/button';
 
 interface TaskItemProps {
   task: Task;
@@ -25,6 +26,17 @@ export function TaskItem({ task }: TaskItemProps) {
     const allSubtasksCompleted = updatedSubtasks.every(st => st.completed);
     dispatch({ type: 'UPDATE_TASK', payload: { ...task, subtasks: updatedSubtasks, completed: allSubtasksCompleted } });
   };
+
+  const toggleMyDay = () => {
+    if (task.listId === 'my-day') {
+      // Remove from My Day, move to 'tasks' list
+      dispatch({ type: 'UPDATE_TASK', payload: { ...task, listId: 'tasks' } });
+    } else {
+      // Add to My Day
+      dispatch({ type: 'UPDATE_TASK', payload: { ...task, listId: 'my-day' } });
+    }
+  };
+
 
   const getTaskTags = () => {
     return tags.filter(tag => task.tagIds.includes(tag.id));
@@ -86,7 +98,7 @@ export function TaskItem({ task }: TaskItemProps) {
                     {dueDateLabel && (
                         <span className={cn(
                             "flex items-center gap-1.5 font-semibold",
-                            isToday(parseISO(task.dueDate!)) ? "text-primary" : ""
+                             task.dueDate && isToday(parseISO(task.dueDate)) ? "text-primary" : ""
                         )}>
                             <Clock className="h-3 w-3" />
                             {dueDateLabel} {task.dueDate && format(parseISO(task.dueDate), 'HH:mm')}
@@ -107,6 +119,14 @@ export function TaskItem({ task }: TaskItemProps) {
                     ))}
                 </div>
             </div>
+             <Button variant="ghost" size="icon" onClick={toggleMyDay} className="h-8 w-8 shrink-0">
+                {task.listId === 'my-day' ? (
+                    <X className="h-4 w-4 text-red-500" />
+                ) : (
+                    <Sun className="h-4 w-4 text-yellow-500" />
+                )}
+                <span className="sr-only">{task.listId === 'my-day' ? 'Remove from My Day' : 'Add to My Day'}</span>
+            </Button>
         </div>
         {task.subtasks && task.subtasks.length > 0 && (
             <div className="pl-8 space-y-2">

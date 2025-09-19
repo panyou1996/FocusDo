@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Lightbulb, Plus, Sparkles } from 'lucide-react';
 import { TaskList } from './task-list';
 import { Skeleton } from './ui/skeleton';
+import { parseISO } from 'date-fns';
 
 export function MyDayView() {
   const { tasks } = useTasks();
@@ -20,7 +21,7 @@ export function MyDayView() {
     const fetchRecommendations = async () => {
       setIsLoading(true);
       try {
-        const availableTasks = tasks.filter((t) => !t.completed);
+        const availableTasks = tasks.filter((t) => !t.completed && t.listId !== 'my-day');
         const input = {
           userHabits: 'Prefers to work on deep work in the morning and smaller tasks in the afternoon.',
           taskPriorities: 'Urgent tasks and work related to "Project Aqua" are high priority.',
@@ -30,7 +31,7 @@ export function MyDayView() {
         const result = await recommendMyDayTasks(input);
         const recommendedTitles = result.recommendedTasks.split(',').map(t => t.trim());
         
-        const filteredTasks = availableTasks.filter(t => recommendedTitles.includes(t.title) && t.listId !== 'my-day');
+        const filteredTasks = availableTasks.filter(t => recommendedTitles.includes(t.title));
         setRecommendedTasks(filteredTasks);
       } catch (error) {
         console.error('Failed to fetch task recommendations:', error);
@@ -42,7 +43,35 @@ export function MyDayView() {
     fetchRecommendations();
   }, [tasks]);
 
-  const myDayTasks = useMemo(() => tasks.filter((task) => task.listId === 'my-day'), [tasks]);
+  const myDayTasks = useMemo(() => {
+    return tasks
+      .filter((task) => task.listId === 'my-day')
+      .sort((a, b) => {
+        // Sort completed tasks to the bottom
+        if (a.completed && !b.completed) return 1;
+        if (!a.completed && b.completed) return -1;
+
+        // 1. Sort by due date (time)
+        if (a.dueDate && b.dueDate) {
+          const aDate = parseISO(a.dueDate);
+          const bDate = parseISO(b.dueDate);
+          if (aDate.getTime() !== bDate.getTime()) {
+            return aDate.getTime() - bDate.getTime();
+          }
+        }
+        if (a.dueDate && !b.dueDate) return -1;
+        if (!a.dueDate && b.dueDate) return 1;
+        
+        // 2. Sort by importance (urgent tag)
+        const aIsUrgent = a.tagIds.includes('urgent');
+        const bIsUrgent = b.tagIds.includes('urgent');
+        if (aIsUrgent && !bIsUrgent) return -1;
+        if (!aIsUrgent && bIsUrgent) return 1;
+
+        // 3. Sort by creation time
+        return parseISO(a.createdAt).getTime() - parseISO(b.createdAt).getTime();
+      });
+  }, [tasks]);
 
   const handleAddTaskToMyDay = (task: Task) => {
     dispatch({ type: 'UPDATE_TASK', payload: { ...task, listId: 'my-day' } });

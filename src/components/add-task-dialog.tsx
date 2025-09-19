@@ -25,7 +25,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { Calendar as CalendarIcon, List, Plus, Tag, Trash2, X, Clock, CheckSquare, Check } from 'lucide-react';
 import { Calendar } from './ui/calendar';
-import { format } from 'date-fns';
+import { format, isToday } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { cn, getTagColorClasses } from '@/lib/utils';
 import React, { useState } from 'react';
@@ -90,21 +90,31 @@ export function AddTaskDialog({ open, onOpenChange, defaultListId }: AddTaskDial
 
   const onSubmit = (data: TaskFormValues) => {
     let dueDate: string | undefined = undefined;
+    let listId = data.listId;
+
     if (data.dueDate) {
         const date = new Date(data.dueDate);
         if (data.time) {
             const [hours, minutes] = data.time.split(':');
             date.setHours(parseInt(hours, 10), parseInt(minutes, 10));
+        } else {
+            // Set to beginning of the day if no time is specified
+            date.setHours(0, 0, 0, 0);
         }
         dueDate = date.toISOString();
+
+        if (isToday(date)) {
+            listId = 'my-day';
+        }
     }
+
 
     const newTask = {
       id: `TASK-${Date.now()}`,
       title: data.title,
       description: data.description,
       completed: false,
-      listId: data.listId,
+      listId: listId,
       dueDate: dueDate,
       duration: data.duration,
       tagIds: data.tagIds || [],
