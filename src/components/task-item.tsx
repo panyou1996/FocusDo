@@ -4,7 +4,7 @@ import type { Task, CalendarEvent } from '@/lib/types';
 import { useTasks, useTasksDispatch } from '@/hooks/use-tasks';
 import { Checkbox } from './ui/checkbox';
 import { cn, getListColorClasses } from '@/lib/utils';
-import { format, isToday, isTomorrow, parseISO } from 'date-fns';
+import { format, isToday, isTomorrow, parseISO, addMinutes } from 'date-fns';
 import { Badge } from './ui/badge';
 import { Progress } from './ui/progress';
 import { Clock, Sun, X, CalendarDays, GripVertical, Star, Tag, Plus, Check as CheckIcon, Sparkles, Briefcase, Video } from 'lucide-react';
@@ -339,6 +339,27 @@ export function TaskItem({ item, viewMode = 'detailed', index, isDragDisabled = 
     const eventColorClass = event?.calendarId === 'work' ? 'border-blue-500' : 'border-green-500';
     const EventIcon = event?.calendarId === 'work' ? Briefcase : (event ? Video : null);
 
+    const getTimeDisplay = () => {
+        if (item.startTime) {
+            const start = parseISO(item.startTime);
+            let end;
+
+            if (item.type === 'event' && item.endTime) {
+                end = parseISO(item.endTime);
+            } else if (item.type === 'task' && item.duration) {
+                end = addMinutes(start, item.duration);
+            }
+
+            if (end) {
+                return `${format(start, 'HH:mm')} - ${format(end, 'HH:mm')}`;
+            }
+            return format(start, 'HH:mm');
+        }
+        return isTask && task?.description ? task.description : null;
+    };
+
+    const timeDisplay = getTimeDisplay();
+
     return (
       <div
         ref={provided?.innerRef}
@@ -372,16 +393,13 @@ export function TaskItem({ item, viewMode = 'detailed', index, isDragDisabled = 
           EventIcon && <EventIcon className="h-5 w-5 text-muted-foreground flex-shrink-0" />
         )}
         
-        <div className="flex-1">
+        <div className="flex-1" onClick={openEditDialog}>
             <p className={cn('font-medium', task?.completed && 'line-through text-muted-foreground')}>
               {item.title}
             </p>
-            {(item.startTime || (isTask && task?.description)) && (
+            {timeDisplay && (
                 <p className="text-sm text-muted-foreground">
-                    {item.startTime 
-                        ? `${format(parseISO(item.startTime), 'HH:mm')}${item.endTime ? ` - ${format(parseISO(item.endTime), 'HH:mm')}` : ''}`
-                        : (isTask && task?.description)
-                    }
+                    {timeDisplay}
                 </p>
             )}
         </div>
