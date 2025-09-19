@@ -167,7 +167,7 @@ export function EditTaskDialog({ open, onOpenChange, task }: EditTaskDialogProps
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg max-h-[85vh] flex flex-col p-0">
+      <DialogContent className="sm:max-w-2xl max-h-[85vh] flex flex-col p-0">
         <form onSubmit={handleSubmit(onSubmit)} className="flex-1 flex flex-col min-h-0">
             <ScrollArea className="flex-1">
                 <div className="space-y-4 pt-6 pb-6 px-6">
@@ -176,18 +176,62 @@ export function EditTaskDialog({ open, onOpenChange, task }: EditTaskDialogProps
                             id="title" 
                             {...register('title')} 
                             placeholder="e.g. Finalize presentation" 
-                            className="text-lg font-medium border-none -ml-3 shadow-none focus-visible:ring-0" 
+                            className="text-xl font-semibold border-none -ml-2 shadow-none focus-visible:ring-0" 
                         />
                         {errors.title && <p className="text-sm text-destructive ml-3">{errors.title.message}</p>}
                          <Textarea 
                             id="description" 
                             {...register('description')} 
                             placeholder="Add more details..." 
-                            className="border-none shadow-none focus-visible:ring-0 -ml-3"
+                            className="border-none shadow-none focus-visible:ring-0 -ml-2"
                         />
                     </div>
                     
-                    <div className="space-y-4">
+                    <div className="space-y-4 px-1">
+                         <div className="space-y-3">
+                            <div className="flex items-center gap-2">
+                                <CheckSquare className="h-4 w-4 text-muted-foreground" />
+                                <h4 className="text-sm font-medium">Subtasks</h4>
+                            </div>
+                            <div className="space-y-2">
+                                {fields.map((field, index) => (
+                                    <div key={field.id} className="flex items-center gap-2">
+                                    <Controller
+                                        name={`subtasks.${index}.completed`}
+                                        control={control}
+                                        render={({ field: checkboxField }) => (
+                                        <Checkbox
+                                            checked={checkboxField.value}
+                                            onCheckedChange={checkboxField.onChange}
+                                            />
+                                        )}
+                                    />
+                                    <Input {...register(`subtasks.${index}.title`)} className="h-8" />
+                                    <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)} className="h-8 w-8 flex-shrink-0">
+                                        <Trash2 className="h-4 w-4 text-destructive" />
+                                    </Button>
+                                    </div>
+                                ))}
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <Input
+                                    value={newSubtask}
+                                    onChange={(e) => setNewSubtask(e.target.value)}
+                                    placeholder="Add a new subtask..."
+                                    className="h-8"
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                            e.preventDefault();
+                                            handleAddSubtask();
+                                        }
+                                    }}
+                                />
+                                <Button type="button" size="icon" variant="ghost" onClick={handleAddSubtask} className="h-8 w-8 flex-shrink-0">
+                                    <PlusCircle className="h-4 w-4" />
+                                </Button>
+                            </div>
+                        </div>
+
                         <div className="flex items-center space-x-4">
                             <Controller
                                 name="isMyDay"
@@ -359,52 +403,6 @@ export function EditTaskDialog({ open, onOpenChange, task }: EditTaskDialogProps
                                 )}
                             />
                         </div>
-
-                        <div className="space-y-2">
-                            <div className="flex items-center gap-2">
-                                <CheckSquare className="h-4 w-4 text-muted-foreground" />
-                                <h4 className="text-sm font-medium">Subtasks</h4>
-                            </div>
-                            <ScrollArea className="max-h-28 pr-4">
-                                <div className="space-y-2">
-                                    {fields.map((field, index) => (
-                                        <div key={field.id} className="flex items-center gap-2">
-                                        <Controller
-                                            name={`subtasks.${index}.completed`}
-                                            control={control}
-                                            render={({ field: checkboxField }) => (
-                                            <Checkbox
-                                                checked={checkboxField.value}
-                                                onCheckedChange={checkboxField.onChange}
-                                                />
-                                            )}
-                                        />
-                                        <Input {...register(`subtasks.${index}.title`)} className="h-8" />
-                                        <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)} className="h-8 w-8">
-                                            <Trash2 className="h-4 w-4 text-destructive" />
-                                        </Button>
-                                        </div>
-                                    ))}
-                                </div>
-                            </ScrollArea>
-                            <div className="flex items-center gap-2">
-                                <Input
-                                    value={newSubtask}
-                                    onChange={(e) => setNewSubtask(e.target.value)}
-                                    placeholder="Add a new subtask..."
-                                    className="h-8"
-                                    onKeyDown={(e) => {
-                                        if (e.key === 'Enter') {
-                                            e.preventDefault();
-                                            handleAddSubtask();
-                                        }
-                                    }}
-                                />
-                                <Button type="button" size="icon" variant="ghost" onClick={handleAddSubtask} className="h-8 w-8">
-                                    <PlusCircle className="h-4 w-4" />
-                                </Button>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </ScrollArea>
@@ -420,5 +418,3 @@ export function EditTaskDialog({ open, onOpenChange, task }: EditTaskDialogProps
     </Dialog>
   );
 }
-
-    

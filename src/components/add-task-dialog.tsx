@@ -24,7 +24,7 @@ import {
   SelectValue,
 } from './ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
-import { Calendar as CalendarIcon, List, Plus, Tag, Trash2, X, Clock, CheckSquare, Check, Star, Sun, Palette, PlusCircle } from 'lucide-react';
+import { Calendar as CalendarIcon, List, Plus, Tag, Trash2, Clock, CheckSquare, Check, Star, Sun, Palette, PlusCircle } from 'lucide-react';
 import { Calendar } from './ui/calendar';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
@@ -172,7 +172,7 @@ export function AddTaskDialog({ open, onOpenChange, defaultListId }: AddTaskDial
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg max-h-[85vh] flex flex-col">
+      <DialogContent className="sm:max-w-2xl max-h-[85vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>Add a new task</DialogTitle>
           <DialogDescription>
@@ -180,25 +180,25 @@ export function AddTaskDialog({ open, onOpenChange, defaultListId }: AddTaskDial
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="flex-1 flex flex-col min-h-0">
-            <ScrollArea className="flex-1 -mx-6 px-6">
-                <div className="space-y-4 pt-2 pb-6">
+            <ScrollArea className="flex-1">
+                <div className="space-y-4 pt-2 pb-6 px-1">
                     <div>
                         <Input 
                             id="title" 
                             {...register('title')} 
                             placeholder="e.g. Finalize presentation" 
-                            className="text-lg font-medium border-none -ml-3 shadow-none focus-visible:ring-0" 
+                            className="text-lg font-medium border-none -ml-2 shadow-none focus-visible:ring-0" 
                         />
                         {errors.title && <p className="text-sm text-destructive ml-3">{errors.title.message}</p>}
                         <Textarea 
                             id="description" 
                             {...register('description')} 
                             placeholder="Add more details..." 
-                            className="border-none shadow-none focus-visible:ring-0 -ml-3"
+                            className="border-none shadow-none focus-visible:ring-0 -ml-2"
                         />
                     </div>
                     
-                    <div className="space-y-4">
+                    <div className="space-y-4 px-1">
                         <div className="flex items-center space-x-4">
                             <Controller
                                 name="isMyDay"
@@ -315,7 +315,7 @@ export function AddTaskDialog({ open, onOpenChange, defaultListId }: AddTaskDial
                         </div>
                         {errors.listId && <p className="text-sm text-destructive">{errors.listId.message}</p>}
                         {errors.duration && <p className="text-sm text-destructive">{errors.duration.message}</p>}
-
+                        
                         <div className="space-y-2">
                             <div className="flex items-center gap-2">
                                 <Tag className="h-4 w-4 text-muted-foreground" />
@@ -371,24 +371,22 @@ export function AddTaskDialog({ open, onOpenChange, defaultListId }: AddTaskDial
                             />
                         </div>
 
-                        <div className="space-y-2">
+                        <div className="space-y-3">
                             <div className="flex items-center gap-2">
                                 <CheckSquare className="h-4 w-4 text-muted-foreground" />
                                 <h4 className="text-sm font-medium">Subtasks</h4>
                             </div>
-                            <ScrollArea className="max-h-28 pr-4">
-                                <div className="space-y-2">
-                                    {fields.map((field, index) => (
-                                        <div key={field.id} className="flex items-center gap-2">
-                                        <Checkbox checked={field.completed} disabled />
-                                        <Input {...register(`subtasks.${index}.title`)} className="h-8" />
-                                        <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)} className="h-8 w-8">
-                                            <Trash2 className="h-4 w-4 text-destructive" />
-                                        </Button>
-                                        </div>
-                                    ))}
-                                </div>
-                            </ScrollArea>
+                            <div className="space-y-2">
+                                {fields.map((field, index) => (
+                                    <div key={field.id} className="flex items-center gap-2">
+                                    <Checkbox checked={field.completed} disabled />
+                                    <Input {...register(`subtasks.${index}.title`)} className="h-8" />
+                                    <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)} className="h-8 w-8">
+                                        <Trash2 className="h-4 w-4 text-destructive" />
+                                    </Button>
+                                    </div>
+                                ))}
+                            </div>
                             <div className="flex items-center gap-2">
                                 <Input
                                     value={newSubtask}
@@ -402,7 +400,7 @@ export function AddTaskDialog({ open, onOpenChange, defaultListId }: AddTaskDial
                                         }
                                     }}
                                 />
-                                <Button type="button" size="icon" variant="ghost" onClick={handleAddSubtask} className="h-8 w-8">
+                                <Button type="button" size="icon" variant="ghost" onClick={handleAddSubtask} className="h-8 w-8 flex-shrink-0">
                                     <PlusCircle className="h-4 w-4" />
                                 </Button>
                             </div>
@@ -410,7 +408,7 @@ export function AddTaskDialog({ open, onOpenChange, defaultListId }: AddTaskDial
                     </div>
                 </div>
             </ScrollArea>
-            <DialogFooter className="pt-4 -mx-6 px-6 pb-6 border-t">
+            <DialogFooter className="pt-4 px-1 pb-1 border-t">
                 <Button variant="outline" type="button" onClick={() => onOpenChange(false)} disabled={isSubmitting}>Cancel</Button>
                 <Button type="submit" disabled={isSubmitting}>
                     <Plus className="mr-2 h-4 w-4" />
@@ -422,6 +420,3 @@ export function AddTaskDialog({ open, onOpenChange, defaultListId }: AddTaskDial
     </Dialog>
   );
 }
-
-    
-    
