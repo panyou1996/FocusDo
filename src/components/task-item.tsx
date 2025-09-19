@@ -176,7 +176,7 @@ export function TaskItem({ item, viewMode = 'detailed', index, isDragDisabled = 
     const date = parseISO(task.dueDate);
     if (isToday(date)) return "Today";
     if (isTomorrow(date)) return "Tomorrow";
-    return format(date, 'MMM d');
+    return format(date, 'MMM d, yyyy');
   };
 
   const renderDetailedView = (provided?: any) => {
@@ -230,37 +230,41 @@ export function TaskItem({ item, viewMode = 'detailed', index, isDragDisabled = 
               <p className="text-sm text-muted-foreground">{task.description}</p>
             )}
             <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-              <Popover>
-                <PopoverTrigger asChild>
-                  <button
-                    data-interactive="true"
-                    onClick={(e) => e.stopPropagation()}
-                    className={cn("flex items-center gap-1.5 font-semibold rounded-md -ml-1 px-1 py-0.5 hover:bg-muted",
-                      dueDateLabel && task.dueDate && isToday(parseISO(task.dueDate)) ? "text-primary" : ""
-                    )}>
-                    <CalendarDays className="h-3 w-3" />
-                    {dueDateLabel || <span>Set due date</span>}
-                  </button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" onClick={(e) => e.stopPropagation()}>
-                  <CalendarPicker
-                    mode="single"
-                    selected={task.dueDate ? parseISO(task.dueDate) : undefined}
-                    onSelect={handleDateChange}
-                  />
-                  <div className="p-2 border-t">
-                    <Button data-interactive="true" variant="ghost" size="sm" className="w-full justify-start" onClick={(e) => { e.stopPropagation(); handleDateChange(undefined) }}>
-                      <X className="mr-2 h-4 w-4" />
-                      Remove due date
-                    </Button>
-                  </div>
-                </PopoverContent>
-              </Popover>
+              {dueDateLabel && (
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <button
+                        data-interactive="true"
+                        onClick={(e) => e.stopPropagation()}
+                        className={cn("flex items-center gap-1.5 font-semibold rounded-md -ml-1 px-1 py-0.5 hover:bg-muted",
+                          task.dueDate && isToday(parseISO(task.dueDate)) ? "text-primary" : ""
+                        )}>
+                        <CalendarDays className="h-3 w-3" />
+                        <span>Due: {dueDateLabel}</span>
+                      </button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" onClick={(e) => e.stopPropagation()}>
+                      <CalendarPicker
+                        mode="single"
+                        selected={task.dueDate ? parseISO(task.dueDate) : undefined}
+                        onSelect={handleDateChange}
+                      />
+                      <div className="p-2 border-t">
+                        <Button data-interactive="true" variant="ghost" size="sm" className="w-full justify-start" onClick={(e) => { e.stopPropagation(); handleDateChange(undefined) }}>
+                          <X className="mr-2 h-4 w-4" />
+                          Remove due date
+                        </Button>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+              )}
 
-              <div data-interactive="true" onClick={(e) => e.stopPropagation()} className="flex items-center gap-1.5 font-semibold rounded-md px-1 py-0.5">
-                <Clock className="h-3 w-3" />
-                {task.duration ? `${task.duration} min` : 'Set duration'}
-              </div>
+              {task.duration && (
+                <div data-interactive="true" onClick={(e) => e.stopPropagation()} className="flex items-center gap-1.5 font-semibold rounded-md px-1 py-0.5">
+                  <Clock className="h-3 w-3" />
+                  {task.duration} min
+                </div>
+              )}
 
               <div data-interactive="true" className="flex items-center gap-1.5">
                 <div className="flex items-center gap-1.5">
