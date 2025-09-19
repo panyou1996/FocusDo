@@ -30,6 +30,7 @@ export const initialTasks: Task[] = [
     duration: 120,
     listId: 'work',
     tagIds: ['project-aqua', 'urgent'],
+    subtasks: [],
     createdAt: subDays(today, 5).toISOString(),
   },
   {
@@ -41,6 +42,7 @@ export const initialTasks: Task[] = [
     duration: 90,
     listId: 'work',
     tagIds: ['project-aqua'],
+    subtasks: [],
     createdAt: subDays(today, 4).toISOString(),
   },
   {
@@ -50,6 +52,7 @@ export const initialTasks: Task[] = [
     completed: false,
     listId: 'groceries',
     tagIds: [],
+    subtasks: [],
     createdAt: subDays(today, 1).toISOString(),
   },
   {
@@ -59,6 +62,7 @@ export const initialTasks: Task[] = [
     completed: true,
     listId: 'personal',
     tagIds: ['home'],
+    subtasks: [],
     createdAt: subDays(today, 10).toISOString(),
     dueDate: subDays(today, 2).toISOString(),
   },
@@ -71,6 +75,7 @@ export const initialTasks: Task[] = [
     duration: 180,
     listId: 'work',
     tagIds: ['urgent', 'work'],
+    subtasks: [],
     createdAt: subDays(today, 3).toISOString(),
   },
   {
@@ -80,6 +85,7 @@ export const initialTasks: Task[] = [
     completed: false,
     listId: 'personal',
     tagIds: ['home'],
+    subtasks: [],
     createdAt: subDays(today, 2).toISOString(),
   },
   {
@@ -91,6 +97,10 @@ export const initialTasks: Task[] = [
     duration: 15,
     listId: 'tasks',
     tagIds: ['home', 'quick-task'],
+    subtasks: [
+      { id: 'SUB-001', title: 'Check soil moisture', completed: true },
+      { id: 'SUB-002', title: 'Add fertilizer', completed: false },
+    ],
     createdAt: subDays(today, 1).toISOString(),
   },
     {
@@ -102,6 +112,7 @@ export const initialTasks: Task[] = [
     duration: 10,
     listId: 'personal',
     tagIds: ['home', 'urgent'],
+    subtasks: [],
     createdAt: subDays(today, 2).toISOString(),
   },
 ];

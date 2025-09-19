@@ -13,6 +13,12 @@ export type Tag = {
     | "gray";
 };
 
+export type Subtask = {
+  id: string;
+  title: string;
+  completed: boolean;
+};
+
 export type Task = {
   id: string;
   title: string;
@@ -22,6 +28,7 @@ export type Task = {
   duration?: number; // in minutes
   listId: string;
   tagIds: string[];
+  subtasks: Subtask[];
   createdAt: string; // ISO string
 };
 
