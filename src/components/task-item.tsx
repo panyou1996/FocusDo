@@ -7,12 +7,13 @@ import { cn, getListColorClasses } from '@/lib/utils';
 import { format, isToday, isTomorrow, parseISO } from 'date-fns';
 import { Badge } from './ui/badge';
 import { Progress } from './ui/progress';
-import { Clock, Sun, X, Calendar, GripVertical, Star } from 'lucide-react';
+import { Clock, Sun, X, Calendar, GripVertical, Star, CalendarDays, Tag } from 'lucide-react';
 import { Button } from './ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { useMemo, useState } from 'react';
 import { Input } from './ui/input';
 import { EditTaskDialog } from './edit-task-dialog';
+import { Calendar as CalendarPicker } from './ui/calendar';
 
 interface TaskItemProps {
   task: Task;
@@ -57,6 +58,26 @@ export function TaskItem({ task, variant = 'default' }: TaskItemProps) {
       setIsTimePopoverOpen(false); // Close popover after setting time
     }
   };
+
+  const handleDateChange = (date: Date | undefined) => {
+    const currentDueDate = task.dueDate ? parseISO(task.dueDate) : new Date();
+    let newDueDate: string | undefined = undefined;
+    if (date) {
+        const newDate = new Date(date);
+        newDate.setHours(currentDueDate.getHours(), currentDueDate.getMinutes());
+        newDueDate = newDate.toISOString();
+    }
+    dispatch({ type: 'UPDATE_TASK', payload: { ...task, dueDate: newDueDate } });
+  }
+
+  const handleDurationChange = (duration: number | undefined) => {
+    dispatch({ type: 'UPDATE_TASK', payload: { ...task, duration: duration } });
+  }
+
+  const handleRemoveTag = (tagId: string) => {
+    const newTagIds = task.tagIds.filter(id => id !== tagId);
+    dispatch({ type: 'UPDATE_TASK', payload: { ...task, tagIds: newTagIds } });
+  }
 
   const toggleImportant = () => {
     dispatch({ type: 'UPDATE_TASK', payload: { ...task, isImportant: !task.isImportant } });
@@ -175,7 +196,11 @@ export function TaskItem({ task, variant = 'default' }: TaskItemProps) {
                 className="h-5 w-5 rounded-full mt-0.5 border-primary"
                 aria-label={`Mark task "${task.title}" as ${task.completed ? 'incomplete' : 'complete'}`}
             />
-            <div className="flex-1" onClick={() => setIsEditDialogOpen(true)}>
+            <div className="flex-1" onClick={(e) => {
+                // Prevent opening edit dialog when clicking on interactive elements
+                if ((e.target as HTMLElement).closest('[data-interactive="true"]')) return;
+                setIsEditDialogOpen(true);
+            }}>
                 <label
                 htmlFor={`task-${task.id}`}
                 className={cn(
@@ -188,35 +213,81 @@ export function TaskItem({ task, variant = 'default' }: TaskItemProps) {
                 {task.description && (
                 <p className="text-sm text-muted-foreground">{task.description}</p>
                 )}
-                <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
-                    {dueDateLabel && (
-                        <span className={cn(
-                            "flex items-center gap-1.5 font-semibold",
-                             task.dueDate && isToday(parseISO(task.dueDate)) ? "text-primary" : ""
-                        )}>
-                            <Calendar className="h-3 w-3" />
-                            {dueDateLabel} {hasTime && format(parseISO(task.dueDate!), 'HH:mm')}
-                        </span>
-                    )}
-                    {task.duration && (
-                        <span className="flex items-center gap-1.5">
-                            <Clock className="h-3 w-3" />
-                            {task.duration} min
-                        </span>
-                    )}
-                     {taskTags.map((tag) => (
-                        <Badge key={tag.id} variant="outline" className="text-xs font-normal">
-                            #{tag.label}
-                        </Badge>
-                    ))}
+                <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
+                    <Popover>
+                        <PopoverTrigger asChild>
+                            <button
+                                data-interactive="true"
+                                className={cn("flex items-center gap-1.5 font-semibold rounded-md -ml-1 px-1 py-0.5 hover:bg-muted",
+                                dueDateLabel && task.dueDate && isToday(parseISO(task.dueDate)) ? "text-primary" : ""
+                            )}>
+                                <CalendarDays className="h-3 w-3" />
+                                {dueDateLabel ? (
+                                    <>
+                                        {dueDateLabel} {hasTime && format(parseISO(task.dueDate!), 'HH:mm')}
+                                    </>
+                                ) : (
+                                    <span>Set due date</span>
+                                )}
+                            </button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0">
+                            <CalendarPicker
+                                mode="single"
+                                selected={task.dueDate ? parseISO(task.dueDate) : undefined}
+                                onSelect={handleDateChange}
+                            />
+                            <div className="p-2 border-t">
+                                <Button variant="ghost" size="sm" className="w-full justify-start" onClick={() => handleDateChange(undefined)}>
+                                    <X className="mr-2 h-4 w-4"/>
+                                    Remove due date
+                                </Button>
+                            </div>
+                        </PopoverContent>
+                    </Popover>
+                    
+                    <Popover>
+                        <PopoverTrigger asChild>
+                             <button
+                                data-interactive="true"
+                                className="flex items-center gap-1.5 font-semibold rounded-md px-1 py-0.5 hover:bg-muted"
+                            >
+                                <Clock className="h-3 w-3" />
+                                {task.duration ? `${task.duration} min` : 'Set duration'}
+                            </button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-48 p-2">
+                            <div className="flex gap-2">
+                                <Input type="number" placeholder="Mins" defaultValue={task.duration} onChange={(e) => handleDurationChange(e.target.value ? parseInt(e.target.value) : undefined)} />
+                            </div>
+                        </PopoverContent>
+                    </Popover>
+
+                    <div data-interactive="true" className="flex items-center gap-1">
+                        <Tag className="h-3 w-3"/>
+                        {taskTags.map((tag) => (
+                            <Badge 
+                                key={tag.id} 
+                                variant="outline" 
+                                className="text-xs font-normal group/tag relative pr-5 cursor-pointer hover:border-destructive"
+                                onClick={() => handleRemoveTag(tag.id)}
+                            >
+                                #{tag.label}
+                                <span className="absolute right-1 top-1/2 -translate-y-1/2 hidden group-hover/tag:inline">
+                                    <X className="h-3 w-3" />
+                                </span>
+                            </Badge>
+                        ))}
+                        {taskTags.length === 0 && <span className="font-semibold text-muted-foreground">Add tag</span>}
+                    </div>
                 </div>
             </div>
             <div className="flex items-center">
-              <Button variant="ghost" size="icon" onClick={toggleImportant} className="h-8 w-8 shrink-0">
+              <Button data-interactive="true" variant="ghost" size="icon" onClick={toggleImportant} className="h-8 w-8 shrink-0">
                   <Star className={cn("h-4 w-4", task.isImportant ? "text-yellow-500 fill-yellow-500" : "text-muted-foreground")} />
                   <span className="sr-only">{task.isImportant ? 'Remove importance' : 'Mark as important'}</span>
               </Button>
-              <Button variant="ghost" size="icon" onClick={toggleMyDay} className="h-8 w-8 shrink-0">
+              <Button data-interactive="true" variant="ghost" size="icon" onClick={toggleMyDay} className="h-8 w-8 shrink-0">
                   {task.isMyDay ? (
                       <X className="h-4 w-4 text-red-500" />
                   ) : (
@@ -240,4 +311,3 @@ export function TaskItem({ task, variant = 'default' }: TaskItemProps) {
     </>
   );
 }
-
