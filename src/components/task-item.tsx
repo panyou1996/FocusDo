@@ -39,31 +39,25 @@ export function TaskItem({ task, variant = 'default' }: TaskItemProps) {
       // Remove from My Day, move to 'tasks' list
       dispatch({ type: 'UPDATE_TASK', payload: { ...task, listId: 'tasks' } });
     } else {
-      // Add to My Day, ensuring it has a date
+      // Add to My Day
       const updatedTask = { ...task, listId: 'my-day' };
       if (!updatedTask.dueDate) {
-        updatedTask.dueDate = new Date().toISOString();
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // Set to start of day for an "all-day" task
+        updatedTask.dueDate = today.toISOString();
       }
       dispatch({ type: 'UPDATE_TASK', payload: updatedTask });
     }
   };
 
   const handleTimeChange = () => {
-    if (task.dueDate && newTime) {
-      const date = parseISO(task.dueDate);
+    if (newTime) {
+      const date = task.dueDate ? parseISO(task.dueDate) : new Date();
       const [hours, minutes] = newTime.split(':');
       date.setHours(parseInt(hours, 10));
       date.setMinutes(parseInt(minutes, 10));
       dispatch({ type: 'UPDATE_TASK', payload: { ...task, dueDate: date.toISOString() } });
       setIsTimePopoverOpen(false); // Close popover after setting time
-    } else if (!task.dueDate && newTime) {
-      // if task has no due date, set it to today with new time
-      const date = new Date();
-      const [hours, minutes] = newTime.split(':');
-      date.setHours(parseInt(hours, 10));
-      date.setMinutes(parseInt(minutes, 10));
-      dispatch({ type: 'UPDATE_TASK', payload: { ...task, dueDate: date.toISOString() } });
-      setIsTimePopoverOpen(false);
     }
   };
 

@@ -45,7 +45,7 @@ export function MyDayView() {
 
   const myDayTasks = useMemo(() => {
     return tasks
-      .filter((task) => task.listId === 'my-day' && (!task.dueDate || isToday(parseISO(task.dueDate))))
+      .filter((task) => task.listId === 'my-day' && task.dueDate && isToday(parseISO(task.dueDate)))
       .sort((a, b) => {
         if (a.completed && !b.completed) return 1;
         if (!a.completed && b.completed) return -1;
@@ -68,8 +68,10 @@ export function MyDayView() {
 
   const handleAddTaskToMyDay = (task: Task) => {
     const updatedTask = { ...task, listId: 'my-day' };
-    if (!updatedTask.dueDate) {
-        updatedTask.dueDate = new Date().toISOString();
+     if (!updatedTask.dueDate) {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // Set to start of day for an "all-day" task
+        updatedTask.dueDate = today.toISOString();
     }
     dispatch({ type: 'UPDATE_TASK', payload: updatedTask });
     setRecommendedTasks(prev => prev.filter(t => t.id !== task.id));
@@ -91,7 +93,7 @@ export function MyDayView() {
                 <Calendar className="h-5 w-5" />
                 All-day
             </h3>
-            <div className="space-y-2">
+            <div className="divide-y divide-border rounded-lg border">
                 <TaskList tasks={allDayTasks} variant="my-day" />
             </div>
           </div>
