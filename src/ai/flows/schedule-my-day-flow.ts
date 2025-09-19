@@ -55,9 +55,10 @@ Follow these rules strictly:
 1.  Schedule tasks within the user's available time slots as defined in their schedule.
 2.  Prioritize 'isImportant: true' tasks. Try to schedule them earlier in the day if possible.
 3.  Respect the duration of each task. Ensure there is enough time in the schedule for it.
-4.  If a task has no duration, treat it as a 15-minute task.
-5.  The output for 'scheduledTime' for each task MUST be a complete ISO 8601 string, including the date and the new time you have assigned. For example: '2024-08-15T09:30:00.000Z'.
-6.  Do not schedule tasks during break times or outside the specified working hours.
+4.  After each task, schedule a 15-minute break before the next task begins.
+5.  If a task has no duration, treat it as a 15-minute task.
+6.  The output for 'scheduledTime' for each task MUST be a complete ISO 8601 string, including the date and the new time you have assigned. For example: '2024-08-15T09:30:00.000Z'.
+7.  Do not schedule tasks during break times or outside the specified working hours.
 
 User's Schedule:
 {{{userSchedule}}}
