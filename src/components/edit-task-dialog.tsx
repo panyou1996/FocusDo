@@ -171,64 +171,56 @@ export function EditTaskDialog({ open, onOpenChange, task }: EditTaskDialogProps
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg max-h-[85vh] flex flex-col">
-        <DialogHeader>
-          <DialogTitle>Edit task</DialogTitle>
-          <DialogDescription>
-              Make changes to your task here. Click save when you're done.
-          </DialogDescription>
-        </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="flex-1 flex flex-col min-h-0">
-            <ScrollArea className="flex-1 -mx-6 px-6">
-                <div className="space-y-4 pt-2 pb-6">
+            <ScrollArea className="flex-1 -mx-6 px-6 my-4">
+                <div className="space-y-4">
                     <div className="space-y-2">
                         <Input id="title" {...register('title')} placeholder="e.g. Finalize presentation" className="text-base" />
                         {errors.title && <p className="text-sm text-destructive">{errors.title.message}</p>}
                         <Textarea id="description" {...register('description')} placeholder="Add more details..." />
                     </div>
 
-                    <div>
-                        <div className="flex items-center gap-2 mb-2">
+                    <div className="space-y-2">
+                        <div className="flex items-center gap-2">
                             <CheckSquare className="h-4 w-4 text-muted-foreground" />
                             <h4 className="text-sm font-medium">Subtasks</h4>
                         </div>
-                        <div className="space-y-2">
-                            <ScrollArea className="max-h-28">
-                                <div className="space-y-2 pr-4">
-                                    {fields.map((field, index) => (
-                                        <div key={field.id} className="flex items-center gap-2">
-                                        <Controller
-                                            name={`subtasks.${index}.completed`}
-                                            control={control}
-                                            render={({ field: checkboxField }) => (
-                                            <Checkbox
-                                                checked={checkboxField.value}
-                                                onCheckedChange={checkboxField.onChange}
-                                                />
-                                            )}
-                                        />
-                                        <Input {...register(`subtasks.${index}.title`)} className="h-8" />
-                                        <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)} className="h-8 w-8">
-                                            <Trash2 className="h-4 w-4 text-destructive" />
-                                        </Button>
-                                        </div>
-                                    ))}
-                                </div>
-                            </ScrollArea>
-                            <div className="flex items-center gap-2 pt-2">
-                                <Input
-                                    value={newSubtask}
-                                    onChange={(e) => setNewSubtask(e.target.value)}
-                                    placeholder="Add a new subtask..."
-                                    className="h-8"
-                                    onKeyDown={(e) => {
-                                        if (e.key === 'Enter') {
-                                            e.preventDefault();
-                                            handleAddSubtask();
-                                        }
-                                    }}
-                                />
-                                <Button type="button" size="sm" onClick={handleAddSubtask}>Add</Button>
+                        <ScrollArea className="max-h-28 pr-4">
+                            <div className="space-y-2">
+                                {fields.map((field, index) => (
+                                    <div key={field.id} className="flex items-center gap-2">
+                                    <Controller
+                                        name={`subtasks.${index}.completed`}
+                                        control={control}
+                                        render={({ field: checkboxField }) => (
+                                        <Checkbox
+                                            checked={checkboxField.value}
+                                            onCheckedChange={checkboxField.onChange}
+                                            />
+                                        )}
+                                    />
+                                    <Input {...register(`subtasks.${index}.title`)} className="h-8" />
+                                    <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)} className="h-8 w-8">
+                                        <Trash2 className="h-4 w-4 text-destructive" />
+                                    </Button>
+                                    </div>
+                                ))}
                             </div>
+                        </ScrollArea>
+                        <div className="flex items-center gap-2 pt-2">
+                            <Input
+                                value={newSubtask}
+                                onChange={(e) => setNewSubtask(e.target.value)}
+                                placeholder="Add a new subtask..."
+                                className="h-8"
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                        e.preventDefault();
+                                        handleAddSubtask();
+                                    }
+                                }}
+                            />
+                            <Button type="button" size="sm" onClick={handleAddSubtask}>Add</Button>
                         </div>
                     </div>
                 
