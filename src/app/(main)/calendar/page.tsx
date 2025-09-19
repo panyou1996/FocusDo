@@ -8,7 +8,7 @@ import {
   parseISO,
   format,
 } from 'date-fns';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
 import { Button } from '@/components/ui/button';
 
@@ -41,10 +41,7 @@ export default function CalendarPage() {
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Calendar</CardTitle>
-      </CardHeader>
-      <CardContent>
+      <CardContent className="p-4 md:p-6">
         <div className="grid md:grid-cols-[280px_1fr] gap-8">
           <div>
             <Calendar
@@ -55,7 +52,7 @@ export default function CalendarPage() {
               components={{
                 Day: ({ date, displayMonth }) => {
                   const day = <Button variant="ghost" size="icon" className="w-9 h-9">{date.getDate()}</Button>
-                  if (displayMonth !== date) {
+                  if (!displayMonth.isSame(date, 'month')) {
                      return <div />;
                   }
                   return <DayWithDot day={day} date={date} />;
