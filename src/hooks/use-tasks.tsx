@@ -1,13 +1,14 @@
 'use client';
 
 import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
-import type { Task, List, Tag } from '@/lib/types';
-import { initialTasks, initialLists, initialTags } from '@/lib/data';
+import type { Task, List, Tag, CalendarEvent } from '@/lib/types';
+import { initialTasks, initialLists, initialTags, initialEvents } from '@/lib/data';
 
 type AppState = {
   tasks: Task[];
   lists: List[];
   tags: Tag[];
+  events: CalendarEvent[];
 };
 
 type Action =
@@ -69,15 +70,21 @@ const appReducer = (state: AppState, action: Action): AppState => {
 };
 
 const getInitialState = (): AppState => {
+  const initialState = { tasks: initialTasks, lists: initialLists, tags: initialTags, events: initialEvents };
   if (typeof window === 'undefined') {
-    return { tasks: initialTasks, lists: initialLists, tags: initialTags };
+    return initialState;
   }
   try {
     const item = window.localStorage.getItem('aqua-do-state');
-    return item ? JSON.parse(item) : { tasks: initialTasks, lists: initialLists, tags: initialTags };
+    if (item) {
+      const savedState = JSON.parse(item);
+      // Ensure events are also loaded, or fall back to initialEvents
+      return { ...initialState, ...savedState, events: savedState.events || initialEvents };
+    }
+    return initialState;
   } catch (error) {
     console.error('Error reading from localStorage', error);
-    return { tasks: initialTasks, lists: initialLists, tags: initialTags };
+    return initialState;
   }
 };
 

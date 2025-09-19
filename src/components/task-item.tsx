@@ -25,17 +25,8 @@ interface TaskItemProps {
   isDragDisabled?: boolean;
 }
 
-const TimeBadge = ({ date }: { date: string }) => {
-    return (
-        <div className="flex items-center justify-center rounded-md bg-muted px-2 py-1 text-sm font-semibold w-20">
-            <span>{format(parseISO(date), 'HH:mm')}</span>
-        </div>
-    );
-};
-
-
 export function TaskItem({ task, variant = 'default', index, isDragDisabled = false }: TaskItemProps) {
-  const { lists, tags, tasks } = useTasks();
+  const { lists, tags, tasks, events } = useTasks();
   const dispatch = useTasksDispatch();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const { toast } = useToast();
@@ -43,6 +34,7 @@ export function TaskItem({ task, variant = 'default', index, isDragDisabled = fa
   const handleAiSchedule = async () => {
     const userSchedule = localStorage.getItem('userSchedule') || 'Works from 8:30 to 11:30, breaks for lunch, works again from 13:00 to 17:30, breaks for dinner, and is free from 18:30 to 22:00.';
     const myDayTasks = tasks.filter((task) => task.isMyDay && !task.completed);
+    const todayEvents = events.filter(event => isToday(parseISO(event.startTime)));
     
     toast({ title: '🤖 Optimizing your remaining day...', description: 'The AI is working its magic.' });
     
@@ -57,6 +49,11 @@ export function TaskItem({ task, variant = 'default', index, isDragDisabled = fa
           duration: t.duration,
           isImportant: t.isImportant,
           dueDate: t.dueDate,
+        })),
+        events: todayEvents.map(e => ({
+          title: e.title,
+          startTime: e.startTime,
+          endTime: e.endTime,
         })),
         currentDate: new Date().toISOString(),
       };
@@ -192,7 +189,7 @@ export function TaskItem({ task, variant = 'default', index, isDragDisabled = fa
       )}
     >
         <div className="flex items-start gap-3">
-             {variant === 'my-day' && !isDragDisabled ? (
+             {variant === 'my-day' && !isDragDisabled && provided?.dragHandleProps ? (
                 <div {...provided.dragHandleProps} className="mt-1 cursor-grab" data-interactive="true">
                     <GripVertical className="h-4 w-4 text-muted-foreground" />
                 </div>

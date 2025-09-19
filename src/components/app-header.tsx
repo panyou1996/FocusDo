@@ -19,7 +19,7 @@ const DEFAULT_SCHEDULE = 'Works from 8:30 to 11:30, breaks for lunch, works agai
 
 export function AppHeader() {
   const pathname = usePathname();
-  const { lists, tasks } = useTasks();
+  const { lists, tasks, events } = useTasks();
   const dispatch = useTasksDispatch();
   const { toast } = useToast();
   const [isScheduling, setIsScheduling] = useState(false);
@@ -40,6 +40,8 @@ export function AppHeader() {
   }
 
   const myDayTasks = tasks.filter((task) => task.isMyDay);
+  const todayEvents = events.filter(event => isToday(parseISO(event.startTime)));
+
 
   const handleAiSchedule = async () => {
     setIsScheduling(true);
@@ -57,6 +59,11 @@ export function AppHeader() {
           duration: t.duration,
           isImportant: t.isImportant,
           dueDate: t.dueDate,
+        })),
+        events: todayEvents.map(e => ({
+            title: e.title,
+            startTime: e.startTime,
+            endTime: e.endTime
         })),
         currentDate: new Date().toISOString(),
       };

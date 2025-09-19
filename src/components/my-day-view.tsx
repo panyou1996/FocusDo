@@ -4,38 +4,86 @@
 import { useTasks, useTasksDispatch } from '@/hooks/use-tasks';
 import { useMemo } from 'react';
 import { TaskList } from './task-list';
-import { parseISO } from 'date-fns';
-import { Calendar } from 'lucide-react';
+import { parseISO, isToday, format } from 'date-fns';
+import { Calendar, Briefcase, Video } from 'lucide-react';
 import { DragDropContext, DropResult } from 'react-beautiful-dnd';
-import type { Task } from '@/lib/types';
+import type { Task, CalendarEvent } from '@/lib/types';
+import { cn } from '@/lib/utils';
+
+
+const EventItem = ({ event }: { event: CalendarEvent }) => (
+    <div className="flex items-center gap-4">
+        <div className="flex items-center justify-center rounded-md w-20 h-8 text-sm font-semibold bg-muted/50 text-muted-foreground">
+            <span>{format(parseISO(event.startTime), 'HH:mm')}</span>
+        </div>
+        <div className="flex-1">
+            <div
+            className={cn(
+                'group relative flex items-center gap-3 rounded-lg border-l-4 bg-card p-3',
+                event.calendarId === 'work' ? 'border-blue-500' : 'border-green-500'
+            )}
+            >
+                <div className="grid h-8 w-8 flex-shrink-0 place-items-center rounded-full bg-muted">
+                    {event.calendarId === 'work' ? <Briefcase className="h-4 w-4" /> : <Video className="h-4 w-4" />}
+                </div>
+                <div className="flex-1">
+                    <p className="font-medium">{event.title}</p>
+                    <p className="text-sm text-muted-foreground">
+                        {format(parseISO(event.startTime), 'HH:mm')} - {format(parseISO(event.endTime), 'HH:mm')}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+);
 
 
 export function MyDayView() {
-  const { tasks } = useTasks();
+  const { tasks, events } = useTasks();
   const dispatch = useTasksDispatch();
 
-  const myDayTasks = useMemo(() => {
-    return tasks
+  const myDayItems = useMemo(() => {
+    const todayEvents = events
+      .filter((event) => isToday(parseISO(event.startTime)))
+      .map(event => ({ ...event, type: 'event' as const }));
+
+    const myDayTasks = tasks
       .filter((task) => task.isMyDay)
+      .map(task => ({...task, type: 'task' as const }));
+
+    const allItems = [...todayEvents, ...myDayTasks];
+
+    return allItems
       .sort((a, b) => {
-        if (a.completed && !b.completed) return 1;
-        if (!a.completed && b.completed) return -1;
-
-        if (a.startTime && b.startTime) return parseISO(a.startTime).getTime() - parseISO(b.startTime).getTime();
-        if (a.startTime) return -1;
-        if (b.startTime) return 1;
-
-        if (a.isImportant && !b.isImportant) return -1;
-        if (!a.isImportant && b.isImportant) return 1;
+        if (a.type === 'task' && a.completed && (b.type !== 'task' || !b.completed)) return 1;
+        if (b.type === 'task' && b.completed && (a.type !== 'task' || !a.completed)) return -1;
         
-        return parseISO(b.createdAt).getTime() - parseISO(a.createdAt).getTime();
+        const aTime = a.startTime ? parseISO(a.startTime) : new Date(8640000000000000); // Far future for items without time
+        const bTime = b.startTime ? parseISO(b.startTime) : new Date(8640000000000000);
+        
+        if (aTime.getTime() !== bTime.getTime()) {
+            return aTime.getTime() - bTime.getTime();
+        }
+
+        // If times are same, events come before tasks
+        if (a.type === 'event' && b.type === 'task') return -1;
+        if (a.type === 'task' && b.type === 'event') return 1;
+
+        if (a.type === 'task' && b.type === 'task') {
+            if (a.isImportant && !b.isImportant) return -1;
+            if (!a.isImportant && b.isImportant) return 1;
+            return parseISO(b.createdAt).getTime() - parseISO(a.createdAt).getTime();
+        }
+
+        return 0;
       });
-  }, [tasks]);
+  }, [tasks, events]);
 
 
-  const tasksWithTime = myDayTasks.filter(t => t.startTime && !t.completed);
-  const allDayTasks = myDayTasks.filter(t => !t.startTime && !t.completed);
-  const completedTasks = myDayTasks.filter(t => t.completed);
+  const tasksWithTime = myDayItems.filter((item): item is Task & {type: 'task'} => item.type === 'task' && !!item.startTime && !item.completed);
+  const allDayTasks = myDayItems.filter((item): item is Task & {type: 'task'} => item.type === 'task' && !item.startTime && !item.completed);
+  const completedTasks = myDayItems.filter((item): item is Task & {type: 'task'} => item.type === 'task' && item.completed);
+  const scheduledItems = myDayItems.filter(item => !allDayTasks.some(t => t.id === item.id) && !completedTasks.some(t => t.id === item.id));
 
   const onDragEnd = (result: DropResult) => {
     const { destination, source, draggableId } = result;
@@ -50,74 +98,9 @@ export function MyDayView() {
     ) {
       return;
     }
-
-    const sourceList = source.droppableId === 'timed-tasks' ? tasksWithTime : allDayTasks;
-    const destinationList = destination.droppableId === 'timed-tasks' ? tasksWithTime : allDayTasks;
     
-    const task = tasks.find(t => t.id === draggableId);
-    if (!task) return;
-    
-    // Reordering within the timed list
-    if (source.droppableId === 'timed-tasks' && destination.droppableId === 'timed-tasks') {
-        const newList = Array.from(sourceList);
-        const [removed] = newList.splice(source.index, 1);
-        newList.splice(destination.index, 0, removed);
-        
-        // This is a simplified re-scheduling. It swaps times or shifts them.
-        // A more complex implementation could recalculate all times.
-        const newStartTime = destination.index > 0 ? newList[destination.index - 1].startTime : new Date().toISOString();
-        // For simplicity, we're just updating this one task's order.
-        // A full re-sort/re-schedule logic would be needed for true time-shifting.
-        // For now, we dispatch updates for the affected tasks based on their new positions.
-        const updatedTasks = newList.map((t, index) => {
-          // This is a placeholder for a more complex time update logic
-          // For now, just re-dispatch to reflect order change.
-          return t;
-        })
-        
-        // A simple re-ordering for now.
-        const reorderedTasks = Array.from(tasks);
-        const taskIndex = reorderedTasks.findIndex(t => t.id === draggableId);
-        const [movedTask] = reorderedTasks.splice(taskIndex, 1);
-        
-        // Find the anchor task in the full task list
-        const anchorId = newList[destination.index + (destination.index > source.index ? 0 : 1)]?.id;
-        if (!anchorId) {
-            // Moved to end
-             const lastTimedTask = tasksWithTime[tasksWithTime.length - 1];
-             const lastTaskIndex = reorderedTasks.findIndex(t => t.id === lastTimedTask.id);
-             reorderedTasks.splice(lastTaskIndex, 0, movedTask);
-        } else {
-             const anchorIndex = reorderedTasks.findIndex(t => t.id === anchorId);
-             reorderedTasks.splice(anchorIndex, 0, movedTask);
-        }
-
-        // The reordering logic needs to be more robust. 
-        // For this iteration, we focus on the visual drag-drop.
-        // The actual time property is not updated, only the visual order.
-        // Let's create a new sorted list and dispatch updates.
-        const newOrder = [...tasks];
-        const [draggedItem] = newOrder.splice(newOrder.findIndex(t => t.id === draggableId), 1);
-        
-        let targetIndex = -1;
-        if (destination.index < newList.length) {
-          targetIndex = newOrder.findIndex(t => t.id === newList[destination.index].id);
-        }
-        if (targetIndex === -1) {
-          const lastItem = newList[newList.length-1];
-          targetIndex = newOrder.findIndex(t => t.id === lastItem.id)
-        }
-
-        newOrder.splice(targetIndex, 0, draggedItem);
-        
-        // This is not a perfect reorder, but it's a start.
-        // We'll dispatch an update for just the moved task for now.
-        // A better approach would be a dedicated "REORDER_MY_DAY" action.
-        const originalTask = tasks.find(t => t.id === draggableId)!;
-        const targetTask = newList[destination.index];
-        const updatedTask: Task = {...originalTask, startTime: targetTask.startTime}; // Just as an example.
-        // dispatch({ type: 'UPDATE_TASK', payload: updatedTask });
-    }
+    // For this prototype, we will only allow reordering tasks, not changing their times by dragging.
+    // A more advanced implementation would update start times based on drop position relative to other timed items.
   };
 
   
@@ -125,13 +108,28 @@ export function MyDayView() {
     <DragDropContext onDragEnd={onDragEnd}>
       <div className="space-y-8">
         <div>
-          {tasksWithTime.length > 0 && (
-            <div className="space-y-2">
-              <TaskList tasks={tasksWithTime} variant="my-day" droppableId="timed-tasks" />
-            </div>
+          {scheduledItems.length > 0 && (
+             <div className="space-y-2">
+                {scheduledItems.map((item, index) => {
+                    if (item.type === 'event') {
+                        return <EventItem key={item.id} event={item} />;
+                    }
+                    // This is a task
+                    return (
+                        <TaskList
+                            key={item.id}
+                            tasks={[item]}
+                            variant="my-day"
+                            droppableId={`timed-task-${item.id}`} // Unique droppable for each item might not be right
+                            isDropDisabled
+                         />
+                    )
+                })}
+                 <TaskList tasks={tasksWithTime} variant="my-day" droppableId="timed-tasks" />
+             </div>
           )}
 
-          {(allDayTasks.length > 0 || completedTasks.length > 0) && (
+          {(allDayTasks.length > 0 || (myDayItems.length > 0 && scheduledItems.length === 0)) && (
             <div className="mt-8">
               <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
                   <Calendar className="h-5 w-5" />
@@ -143,7 +141,7 @@ export function MyDayView() {
             </div>
           )}
 
-          {myDayTasks.length === 0 && (
+          {myDayItems.length === 0 && (
               <div className="text-center py-10 border-2 border-dashed rounded-lg">
                   <p className="text-muted-foreground">Your day is clear.</p>
                   <p className="text-muted-foreground text-sm">Add tasks from your lists to get started.</p>
@@ -163,4 +161,3 @@ export function MyDayView() {
     </DragDropContext>
   );
 }
-

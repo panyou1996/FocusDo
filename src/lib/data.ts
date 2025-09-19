@@ -1,5 +1,5 @@
-import type { Task, List, Tag } from '@/lib/types';
-import { addDays, subDays } from 'date-fns';
+import type { Task, List, Tag, CalendarEvent } from '@/lib/types';
+import { addDays, subDays, set } from 'date-fns';
 
 const today = new Date();
 
@@ -131,4 +131,35 @@ export const initialTasks: Task[] = [
     subtasks: [],
     createdAt: subDays(today, 2).toISOString(),
   },
+];
+
+export const initialEvents: CalendarEvent[] = [
+  {
+    id: 'EVENT-001',
+    title: 'Team Stand-up',
+    startTime: set(today, { hours: 10, minutes: 0, seconds: 0, milliseconds: 0 }).toISOString(),
+    endTime: set(today, { hours: 10, minutes: 30, seconds: 0, milliseconds: 0 }).toISOString(),
+    calendarId: 'work',
+  },
+  {
+    id: 'EVENT-002',
+    title: 'Project Aqua Sync',
+    startTime: set(today, { hours: 14, minutes: 0, seconds: 0, milliseconds: 0 }).toISOString(),
+    endTime: set(today, { hours: 15, minutes: 0, seconds: 0, milliseconds: 0 }).toISOString(),
+    calendarId: 'work',
+  },
+  {
+    id: 'EVENT-003',
+    title: 'Doctor Appointment',
+    startTime: set(today, { hours: 16, minutes: 0, seconds: 0, milliseconds: 0 }).toISOString(),
+    endTime: set(today, { hours: 16, minutes: 30, seconds: 0, milliseconds: 0 }).toISOString(),
+    calendarId: 'personal',
+  },
+  {
+    id: 'EVENT-004',
+    title: 'Q3 Planning Session',
+    startTime: addDays(set(today, { hours: 11, minutes: 0, seconds: 0, milliseconds: 0 }), 1).toISOString(),
+    endTime: addDays(set(today, { hours: 12, minutes: 30, seconds: 0, milliseconds: 0 }), 1).toISOString(),
+    calendarId: 'work',
+  }
 ];

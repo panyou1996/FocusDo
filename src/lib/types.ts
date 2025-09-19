@@ -42,3 +42,11 @@ export type List = {
     | "pink"
     | "brown";
 };
+
+export type CalendarEvent = {
+  id: string;
+  title: string;
+  startTime: string; // ISO string
+  endTime: string; // ISO string
+  calendarId: 'personal' | 'work';
+};
