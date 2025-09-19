@@ -92,7 +92,7 @@ export function EditTaskDialog({ open, onOpenChange, task }: EditTaskDialogProps
         description: task.description,
         listId: task.listId,
         dueDate: dueDate,
-        time: dueDate ? format(dueDate, 'HH:mm') : undefined,
+        time: dueDate && format(dueDate, 'HH:mm') !== '00:00' ? format(dueDate, 'HH:mm') : undefined,
         duration: task.duration,
         tagIds: task.tagIds || [],
         subtasks: task.subtasks || [],
@@ -119,17 +119,11 @@ export function EditTaskDialog({ open, onOpenChange, task }: EditTaskDialogProps
         dueDate = today.toISOString();
     } else if (data.dueDate) {
         const date = new Date(data.dueDate);
-        if (data.time && data.time !== '00:00') {
+        if (data.time) {
             const [hours, minutes] = data.time.split(':');
             date.setHours(parseInt(hours, 10), parseInt(minutes, 10));
         } else {
-            // Keep original time if no new time is set, or reset if cleared
-            const originalDate = task.dueDate ? parseISO(task.dueDate) : new Date(date);
-            if(format(originalDate, 'HH:mm') !== '00:00' && !data.time) {
-                date.setHours(originalDate.getHours(), originalDate.getMinutes());
-            } else if (!data.time) {
-                date.setHours(0,0,0,0);
-            }
+             date.setHours(0,0,0,0);
         }
         dueDate = date.toISOString();
     }
@@ -418,3 +412,5 @@ export function EditTaskDialog({ open, onOpenChange, task }: EditTaskDialogProps
     </Dialog>
   );
 }
+
+    

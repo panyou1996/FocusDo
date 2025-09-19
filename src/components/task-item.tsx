@@ -49,14 +49,18 @@ export function TaskItem({ task, variant = 'default' }: TaskItemProps) {
   };
 
   const handleTimeChange = () => {
+    const date = task.dueDate ? parseISO(task.dueDate) : new Date();
     if (newTime) {
-      const date = task.dueDate ? parseISO(task.dueDate) : new Date();
       const [hours, minutes] = newTime.split(':');
       date.setHours(parseInt(hours, 10));
       date.setMinutes(parseInt(minutes, 10));
       dispatch({ type: 'UPDATE_TASK', payload: { ...task, dueDate: date.toISOString() } });
-      setIsTimePopoverOpen(false); // Close popover after setting time
+    } else {
+      // If time is cleared, reset to midnight
+      date.setHours(0, 0, 0, 0);
+      dispatch({ type: 'UPDATE_TASK', payload: { ...task, dueDate: date.toISOString() } });
     }
+    setIsTimePopoverOpen(false); // Close popover after setting time
   };
 
   const handleDateChange = (date: Date | undefined) => {
@@ -64,13 +68,14 @@ export function TaskItem({ task, variant = 'default' }: TaskItemProps) {
     let newDueDate: string | undefined = undefined;
     if (date) {
         const newDate = new Date(date);
-        newDate.setHours(currentDueDate.getHours(), currentDueDate.getMinutes());
+        newDate.setHours(currentDueDate.getHours(), currentDueDate.getMinutes(), currentDueDate.getSeconds(), currentDueDate.getMilliseconds());
         newDueDate = newDate.toISOString();
     }
     dispatch({ type: 'UPDATE_TASK', payload: { ...task, dueDate: newDueDate } });
   }
 
-  const handleDurationChange = (duration: number | undefined) => {
+  const handleDurationChange = (e: React.FocusEvent<HTMLInputElement>) => {
+    const duration = e.target.value ? parseInt(e.target.value) : undefined;
     dispatch({ type: 'UPDATE_TASK', payload: { ...task, duration: duration } });
   }
 
@@ -258,7 +263,7 @@ export function TaskItem({ task, variant = 'default' }: TaskItemProps) {
                         </PopoverTrigger>
                         <PopoverContent className="w-48 p-2">
                             <div className="flex gap-2">
-                                <Input type="number" placeholder="Mins" defaultValue={task.duration} onChange={(e) => handleDurationChange(e.target.value ? parseInt(e.target.value) : undefined)} />
+                                <Input type="number" placeholder="Mins" defaultValue={task.duration} onBlur={handleDurationChange} />
                             </div>
                         </PopoverContent>
                     </Popover>
@@ -311,3 +316,5 @@ export function TaskItem({ task, variant = 'default' }: TaskItemProps) {
     </>
   );
 }
+
+    
