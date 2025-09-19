@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -23,6 +24,7 @@ import { Button } from './ui/button';
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
 import { AddListDialog } from './add-list-dialog';
+import { getSidebarListColorClasses } from '@/lib/utils';
 
 
 export function MainSidebar() {
@@ -93,12 +95,14 @@ export function MainSidebar() {
             <SidebarMenu>
               {lists.filter(l => !['my-day', 'important', 'tasks'].includes(l.id)).map((list) => {
                 const Icon = Lucide[list.icon as keyof typeof Lucide] || Lucide.List;
+                const isActive = pathname === `/lists/${list.id}`;
                 return (
                   <SidebarMenuItem key={list.id}>
                     <SidebarMenuButton
                       asChild
-                      isActive={pathname === `/lists/${list.id}`}
+                      isActive={isActive}
                       tooltip={list.title}
+                      className={isActive ? getSidebarListColorClasses(list.color) : ''}
                     >
                       <Link href={`/lists/${list.id}`}>
                         <Icon />
