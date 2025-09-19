@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { SidebarTrigger } from './ui/sidebar';
 import { useTasks, useTasksDispatch } from '@/hooks/use-tasks';
 import { Button } from './ui/button';
-import { Sparkles, Settings, PlusCircle } from 'lucide-react';
+import { Sparkles, Settings, PlusCircle, View, Rows } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { scheduleMyDayTasks } from '@/ai/flows/schedule-my-day-flow';
 import { useToast } from '@/hooks/use-toast';
@@ -17,7 +17,12 @@ import { isToday, parseISO } from 'date-fns';
 
 const DEFAULT_SCHEDULE = 'Works from 8:30 to 11:30, breaks for lunch, works again from 13:00 to 17:30, breaks for dinner, and is free from 18:30 to 22:00.';
 
-export function AppHeader() {
+interface AppHeaderProps {
+    viewMode?: 'compact' | 'detailed';
+    onSwitchViewMode?: (mode: 'compact' | 'detailed') => void;
+}
+
+export function AppHeader({ viewMode, onSwitchViewMode }: AppHeaderProps) {
   const pathname = usePathname();
   const { lists, tasks, events } = useTasks();
   const dispatch = useTasksDispatch();
@@ -143,6 +148,12 @@ export function AppHeader() {
     return 'AquaDo';
   };
 
+  const handleViewModeToggle = () => {
+    if (onSwitchViewMode && viewMode) {
+      onSwitchViewMode(viewMode === 'compact' ? 'detailed' : 'compact');
+    }
+  }
+
   return (
     <>
     <header className="sticky top-0 z-10 flex h-16 items-center justify-between gap-4 border-b bg-background/80 px-4 backdrop-blur-sm md:px-6">
@@ -156,6 +167,11 @@ export function AppHeader() {
                 <Sparkles className="mr-2 h-4 w-4" />
                 {isScheduling ? 'Scheduling...' : 'Smart Schedule'}
             </Button>
+            {onSwitchViewMode && viewMode && (
+                <Button variant="outline" size="icon" onClick={handleViewModeToggle} aria-label="Switch view mode">
+                    {viewMode === 'compact' ? <Rows className="h-4 w-4" /> : <View className="h-4 w-4" />}
+                </Button>
+            )}
             <Button variant="outline" size="icon" onClick={() => setIsSettingsOpen(true)} aria-label="Schedule Settings">
                 <Settings className="h-4 w-4" />
             </Button>

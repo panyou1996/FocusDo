@@ -2,17 +2,19 @@
 'use client';
 
 import { useTasks, useTasksDispatch } from '@/hooks/use-tasks';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { TaskList } from './task-list';
 import { parseISO, isToday } from 'date-fns';
 import { Calendar } from 'lucide-react';
 import { DragDropContext, DropResult } from 'react-beautiful-dnd';
 import type { Task } from '@/lib/types';
+import { AppHeader } from '@/components/app-header';
 
 
 export function MyDayView() {
   const { tasks, events } = useTasks();
   const dispatch = useTasksDispatch();
+  const [viewMode, setViewMode] = useState<'compact' | 'detailed'>('compact');
 
   const myDayItems = useMemo(() => {
     const todayEvents = events
@@ -79,13 +81,14 @@ export function MyDayView() {
   
   return (
     <DragDropContext onDragEnd={onDragEnd}>
-      <div className="space-y-8">
+      <AppHeader viewMode={viewMode} onSwitchViewMode={setViewMode} />
+      <div className="space-y-8 mt-6">
         <div>
           {scheduledItems.length > 0 && (
              <div className="space-y-2">
                 <TaskList
                   items={scheduledItems}
-                  variant="my-day"
+                  viewMode={viewMode}
                   droppableId="timed-items"
                 />
              </div>
@@ -98,7 +101,7 @@ export function MyDayView() {
                   All-day / Unscheduled
               </h3>
               <div className="space-y-2">
-                  <TaskList items={allDayTasks} droppableId="allday-tasks" />
+                  <TaskList items={allDayTasks} droppableId="allday-tasks" viewMode={viewMode} />
               </div>
             </div>
           )}
@@ -114,7 +117,7 @@ export function MyDayView() {
             <div className="pt-4 mt-8">
                 <h3 className="text-sm font-medium text-muted-foreground mb-2 px-4">Completed</h3>
                 <div className="space-y-2">
-                    <TaskList items={completedTasks} droppableId="completed-tasks" isDropDisabled/>
+                    <TaskList items={completedTasks} droppableId="completed-tasks" isDropDisabled viewMode={viewMode}/>
                 </div>
             </div>
         )}

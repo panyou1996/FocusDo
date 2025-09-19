@@ -9,12 +9,12 @@ type Item = (Task & { type: 'task' }) | (CalendarEvent & { type: 'event' });
 
 interface TaskListProps {
   items?: Item[];
-  variant?: 'default' | 'my-day';
+  viewMode?: 'compact' | 'detailed';
   droppableId: string;
   isDropDisabled?: boolean;
 }
 
-export function TaskList({ items, variant = 'default', droppableId, isDropDisabled = false }: TaskListProps) {
+export function TaskList({ items, viewMode = 'detailed', droppableId, isDropDisabled = false }: TaskListProps) {
   if (!items) {
     return null;
   }
@@ -39,7 +39,7 @@ export function TaskList({ items, variant = 'default', droppableId, isDropDisabl
             <TaskItem 
               key={item.id} 
               item={item} 
-              variant={variant} 
+              viewMode={viewMode}
               index={index} 
               isDragDisabled={isDropDisabled || (item.type === 'task' && item.completed) || item.type === 'event' }
             />

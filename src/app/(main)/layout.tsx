@@ -1,12 +1,14 @@
+
 'use client';
 
-import { AppHeader } from '@/components/app-header';
 import { MainSidebar } from '@/components/main-sidebar';
-import { SidebarProvider, Sidebar, SidebarInset } from '@/components/ui/sidebar';
+import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { AddTaskDialog } from '@/components/add-task-dialog';
+import { usePathname } from 'next/navigation';
+import { AppHeader } from '@/components/app-header';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   // Use a cookie to remember the sidebar state
@@ -14,6 +16,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   // and we need to read the cookie on the server to avoid a flash of content.
   const [defaultOpen, setDefaultOpen] = React.useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const pathname = usePathname();
 
   React.useEffect(() => {
     const cookieValue = document.cookie
@@ -26,11 +29,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  // MyDayView now renders its own header to handle view mode switching
+  const showDefaultHeader = pathname !== '/my-day';
+
   return (
     <SidebarProvider defaultOpen={defaultOpen}>
       <MainSidebar />
       <SidebarInset className="bg-background min-h-screen">
-        <AppHeader />
+        {showDefaultHeader && <AppHeader />}
         <main className="flex-1 p-4 md:p-6">
           <div className="w-full">
            {children}
