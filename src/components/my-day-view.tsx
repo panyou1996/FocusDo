@@ -62,7 +62,7 @@ export function MyDayView() {
         if (aIsUrgent && !bIsUrgent) return -1;
         if (!aIsUrgent && bIsUrgent) return 1;
 
-        return parseISO(a.createdAt).getTime() - parseISO(b.createdAt).getTime();
+        return parseISO(b.createdAt).getTime() - parseISO(a.createdAt).getTime();
       });
   }, [tasks]);
 

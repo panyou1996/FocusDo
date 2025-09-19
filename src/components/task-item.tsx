@@ -21,6 +21,7 @@ export function TaskItem({ task, variant = 'default' }: TaskItemProps) {
   const { tags } = useTasks();
   const dispatch = useTasksDispatch();
   const [newTime, setNewTime] = useState(task.dueDate ? format(parseISO(task.dueDate), 'HH:mm') : '');
+  const [isTimePopoverOpen, setIsTimePopoverOpen] = useState(false);
 
 
   const handleCheckedChange = (checked: boolean) => {
@@ -50,6 +51,7 @@ export function TaskItem({ task, variant = 'default' }: TaskItemProps) {
       date.setHours(parseInt(hours, 10));
       date.setMinutes(parseInt(minutes, 10));
       dispatch({ type: 'UPDATE_TASK', payload: { ...task, dueDate: date.toISOString() } });
+      setIsTimePopoverOpen(false); // Close popover after setting time
     }
   };
 
@@ -80,7 +82,7 @@ export function TaskItem({ task, variant = 'default' }: TaskItemProps) {
             {/* Time and Date Section */}
             <div className="flex-shrink-0 text-right">
                 {hasTime ? (
-                    <Popover>
+                    <Popover open={isTimePopoverOpen} onOpenChange={setIsTimePopoverOpen}>
                         <PopoverTrigger asChild>
                             <button className="text-lg font-bold focus:outline-none focus:ring-2 focus:ring-ring rounded-md px-1 -mx-1">
                                 {format(parseISO(task.dueDate!), 'HH:mm')}
