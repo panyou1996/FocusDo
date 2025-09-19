@@ -27,23 +27,44 @@ export const getListColorClasses = (
   return taskListColorMap[color]
 }
 
+const borderColorMap: Record<string, string> = {
+  red: "border-red-500",
+  orange: "border-orange-500",
+  yellow: "border-yellow-500",
+  green: "border-green-500",
+  blue: "border-blue-500",
+  purple: "border-purple-500",
+  gray: "border-gray-500",
+  pink: "border-pink-500",
+  brown: "border-stone-500",
+};
+
+export const getBorderColorClasses = (color?: string): string => {
+  if (!color || !borderColorMap[color]) {
+    return "border-border";
+  }
+  return borderColorMap[color];
+};
+
+
 const sidebarListColorMap: Record<NonNullable<List['color']>, string> = {
-  red: "bg-red-200/50 dark:bg-red-800/30 text-red-800 dark:text-red-200",
-  orange: "bg-orange-200/50 dark:bg-orange-800/30 text-orange-800 dark:text-orange-200",
-  yellow: "bg-yellow-200/50 dark:bg-yellow-800/30 text-yellow-800 dark:text-yellow-200",
-  green: "bg-green-200/50 dark:bg-green-800/30 text-green-800 dark:text-green-200",
-  blue: "bg-blue-200/50 dark:bg-blue-800/30 text-blue-800 dark:text-blue-200",
-  purple: "bg-purple-200/50 dark:bg-purple-800/30 text-purple-800 dark:text-purple-200",
-  gray: "bg-gray-200/50 dark:bg-gray-800/30 text-gray-800 dark:text-gray-200",
-  pink: "bg-pink-200/50 dark:bg-pink-800/30 text-pink-800 dark:text-pink-200",
-  brown: "bg-stone-200/50 dark:bg-stone-800/30 text-stone-800 dark:text-stone-200",
+  red: "data-[active=true]:bg-red-200/50 data-[active=true]:dark:bg-red-800/30 data-[active=true]:text-red-800 data-[active=true]:dark:text-red-200",
+  orange: "data-[active=true]:bg-orange-200/50 data-[active=true]:dark:bg-orange-800/30 data-[active=true]:text-orange-800 data-[active=true]:dark:text-orange-200",
+  yellow: "data-[active=true]:bg-yellow-200/50 data-[active=true]:dark:bg-yellow-800/30 data-[active=true]:text-yellow-800 data-[active=true]:dark:text-yellow-200",
+  green: "data-[active=true]:bg-green-200/50 data-[active=true]:dark:bg-green-800/30 data-[active=true]:text-green-800 data-[active=true]:dark:text-green-200",
+  blue: "data-[active=true]:bg-blue-200/50 data-[active=true]:dark:bg-blue-800/30 data-[active=true]:text-blue-800 data-[active=true]:dark:text-blue-200",
+  purple: "data-[active=true]:bg-purple-200/50 data-[active=true]:dark:bg-purple-800/30 data-[active=true]:text-purple-800 data-[active=true]:dark:text-purple-200",
+  gray: "data-[active=true]:bg-gray-200/50 data-[active=true]:dark:bg-gray-800/30 data-[active=true]:text-gray-800 data-[active=true]:dark:text-gray-200",
+  pink: "data-[active=true]:bg-pink-200/50 data-[active=true]:dark:bg-pink-800/30 data-[active=true]:text-pink-800 data-[active=true]:dark:text-pink-200",
+  brown: "data-[active=true]:bg-stone-200/50 data-[active=true]:dark:bg-stone-800/30 data-[active=true]:text-stone-800 data-[active=true]:dark:text-stone-200",
 };
 
 
 export const getSidebarListColorClasses = (
-  color?: List["color"]
+  color?: List["color"],
+  isActive?: boolean
 ): string => {
-  if (!color) {
+  if (!color || !isActive) {
     return "data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground";
   }
   return cn(sidebarListColorMap[color], 'hover:bg-opacity-70');

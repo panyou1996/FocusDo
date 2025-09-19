@@ -127,7 +127,7 @@ export function MainSidebar() {
                       asChild
                       isActive={isActive}
                       tooltip={list.title}
-                      className={isActive ? getSidebarListColorClasses(list.color) : ''}
+                      className={getSidebarListColorClasses(list.color, isActive)}
                     >
                       <Link href={`/lists/${list.id}`}>
                         <Icon />

@@ -3,7 +3,7 @@
 import type { Task, CalendarEvent } from '@/lib/types';
 import { useTasks, useTasksDispatch } from '@/hooks/use-tasks';
 import { Checkbox } from './ui/checkbox';
-import { cn, getListColorClasses } from '@/lib/utils';
+import { cn, getListColorClasses, getBorderColorClasses } from '@/lib/utils';
 import { format, isToday, isTomorrow, parseISO, addMinutes } from 'date-fns';
 import { Badge } from './ui/badge';
 import { Progress } from './ui/progress';
@@ -155,7 +155,12 @@ export function TaskItem({ item, viewMode = 'detailed', index, isDragDisabled = 
     dispatch({ type: 'UPDATE_TASK', payload: { ...task, isImportant: !task.isImportant } });
   };
 
-  const openEditDialog = () => {
+  const openEditDialog = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    if (target.closest('[data-interactive="true"]')) {
+      return;
+    }
+
     if (isTask) {
         setIsEditDialogOpen(true);
     }
@@ -199,6 +204,7 @@ export function TaskItem({ item, viewMode = 'detailed', index, isDragDisabled = 
           getListColorClasses(taskList?.color),
           task.completed && 'bg-card/60 dark:bg-card/40 opacity-60'
         )}
+        onClick={openEditDialog}
       >
         <div className="flex items-start gap-3">
           {viewMode !== 'compact' && !isDragDisabled && provided?.dragHandleProps ? (
@@ -216,14 +222,13 @@ export function TaskItem({ item, viewMode = 'detailed', index, isDragDisabled = 
             data-interactive="true"
             onClick={(e) => e.stopPropagation()}
           />
-          <div className="flex-1" onClick={openEditDialog}>
+          <div className="flex-1">
             <label
               htmlFor={`task-${task.id}`}
               className={cn(
-                'font-medium cursor-pointer',
+                'font-medium',
                 task.completed && 'line-through text-muted-foreground'
               )}
-              onClick={(e) => e.stopPropagation()} // Prevent label click from triggering parent onClick
             >
               {task.title}
             </label>
@@ -341,14 +346,16 @@ export function TaskItem({ item, viewMode = 'detailed', index, isDragDisabled = 
   }
 
   const renderCompactView = (provided?: any) => {
-    const eventColorClass = event?.calendarId === 'work' ? 'border-blue-500' : 'border-green-500';
+    const taskList = getTaskList;
+    const eventColor = event?.calendarId === 'work' ? 'blue' : 'green';
+    const borderColorClass = getBorderColorClasses(isTask ? taskList?.color : eventColor);
+
     let ItemIcon;
 
     if (isTask) {
-        const taskList = getTaskList;
         ItemIcon = Lucide[taskList?.icon as keyof typeof Lucide] || Lucide.List;
     } else {
-        ItemIcon = event?.calendarId === 'work' ? Briefcase : (event ? Video : Lucide.List);
+        ItemIcon = event?.calendarId === 'work' ? Briefcase : Video;
     }
 
     const getTimeDisplay = () => {
@@ -377,10 +384,8 @@ export function TaskItem({ item, viewMode = 'detailed', index, isDragDisabled = 
         ref={provided?.innerRef}
         {...provided?.draggableProps}
         className={cn(
-          'group relative flex items-center gap-3 rounded-lg bg-card p-3 shadow-sm transition-all hover:shadow-md animate-in fade-in-50',
-          !isTask && eventColorClass,
-          !isTask && 'border-l-4',
-          isTask && 'border',
+          'group relative flex items-center gap-3 rounded-lg bg-card p-3 shadow-sm transition-all hover:shadow-md animate-in fade-in-50 border-l-4',
+          borderColorClass,
           task?.completed && 'bg-card/60 dark:bg-card/40 opacity-60'
         )}
         onClick={openEditDialog}
@@ -401,11 +406,19 @@ export function TaskItem({ item, viewMode = 'detailed', index, isDragDisabled = 
               data-interactive="true"
               onClick={(e) => e.stopPropagation()}
             />
-        ): null}
+        ): (
+          <Checkbox
+            id={`event-compact-${item.id}`}
+            className="h-5 w-5 rounded-full border-primary"
+            aria-label="Event checkbox"
+            data-interactive="true"
+            disabled
+          />
+        )}
         
         {ItemIcon && <ItemIcon className="h-5 w-5 text-muted-foreground flex-shrink-0" />}
         
-        <div className="flex-1" onClick={openEditDialog}>
+        <div className="flex-1">
             <p className={cn('font-medium', task?.completed && 'line-through text-muted-foreground')}>
               {item.title}
             </p>
