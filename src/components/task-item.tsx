@@ -1,3 +1,4 @@
+
 'use client';
 import type { Task } from '@/lib/types';
 import { useTasks, useTasksDispatch } from '@/hooks/use-tasks';
@@ -11,6 +12,7 @@ import { Button } from './ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { useMemo, useState } from 'react';
 import { Input } from './ui/input';
+import { EditTaskDialog } from './edit-task-dialog';
 
 interface TaskItemProps {
   task: Task;
@@ -22,6 +24,7 @@ export function TaskItem({ task, variant = 'default' }: TaskItemProps) {
   const dispatch = useTasksDispatch();
   const [newTime, setNewTime] = useState(task.dueDate ? format(parseISO(task.dueDate), 'HH:mm') : '');
   const [isTimePopoverOpen, setIsTimePopoverOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
 
   const handleCheckedChange = (checked: boolean) => {
@@ -116,8 +119,8 @@ export function TaskItem({ task, variant = 'default' }: TaskItemProps) {
             <div className="h-full border-l"></div>
 
              {/* Task Details Section */}
-             <div className="flex-grow space-y-1 pt-1">
-                <p className={cn('font-medium', task.completed && 'line-through text-muted-foreground')}>{task.title}</p>
+             <div className="flex-grow space-y-1 pt-1" onClick={() => setIsEditDialogOpen(true)}>
+                <p className={cn('font-medium cursor-pointer', task.completed && 'line-through text-muted-foreground')}>{task.title}</p>
                 {task.description && (
                   <p className="text-sm text-muted-foreground">{task.description}</p>
                 )}
@@ -149,12 +152,14 @@ export function TaskItem({ task, variant = 'default' }: TaskItemProps) {
                     <GripVertical className="h-4 w-4" />
                 </Button>
             </div>
+            <EditTaskDialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen} task={task} />
         </div>
      );
   }
 
 
   return (
+    <>
     <div
       className={cn(
         'group relative flex flex-col gap-2 rounded-lg border shadow-sm transition-all hover:shadow-md animate-in fade-in-50 p-3 text-card-foreground',
@@ -170,7 +175,7 @@ export function TaskItem({ task, variant = 'default' }: TaskItemProps) {
                 className="h-5 w-5 rounded-full mt-0.5 border-primary"
                 aria-label={`Mark task "${task.title}" as ${task.completed ? 'incomplete' : 'complete'}`}
             />
-            <div className="flex-1">
+            <div className="flex-1" onClick={() => setIsEditDialogOpen(true)}>
                 <label
                 htmlFor={`task-${task.id}`}
                 className={cn(
@@ -231,5 +236,8 @@ export function TaskItem({ task, variant = 'default' }: TaskItemProps) {
             </div>
         )}
     </div>
+    <EditTaskDialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen} task={task} />
+    </>
   );
 }
+

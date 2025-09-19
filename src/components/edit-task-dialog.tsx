@@ -1,0 +1,420 @@
+
+'use client';
+
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { Textarea } from './ui/textarea';
+import { useTasks, useTasksDispatch } from '@/hooks/use-tasks';
+import { useForm, Controller, useFieldArray } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from './ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
+import { Calendar as CalendarIcon, List, Plus, Tag, Trash2, X, Clock, CheckSquare, Check, Star, Sun, Save } from 'lucide-react';
+import { Calendar } from './ui/calendar';
+import { format, parseISO } from 'date-fns';
+import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
+import React, { useState, useEffect } from 'react';
+import { Checkbox } from './ui/checkbox';
+import { ScrollArea } from './ui/scroll-area';
+import { Switch } from './ui/switch';
+import { Label } from './ui/label';
+import type { Tag as TagType, Task } from '@/lib/types';
+
+const subtaskSchema = z.object({
+  id: z.string(),
+  title: z.string().min(1, 'Subtask title cannot be empty.'),
+  completed: z.boolean().default(false),
+});
+
+const taskSchema = z.object({
+  title: z.string().min(1, 'Title is required'),
+  description: z.string().optional(),
+  listId: z.string().min(1, 'Please select a list'),
+  dueDate: z.date().optional(),
+  time: z.string().optional(),
+  duration: z.coerce.number().int().positive().optional(),
+  tagIds: z.array(z.string()).optional(),
+  subtasks: z.array(subtaskSchema).optional(),
+  isMyDay: z.boolean().optional(),
+  isImportant: z.boolean().optional(),
+});
+
+type TaskFormValues = z.infer<typeof taskSchema>;
+
+interface EditTaskDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  task: Task;
+}
+
+export function EditTaskDialog({ open, onOpenChange, task }: EditTaskDialogProps) {
+  const { lists, tags } = useTasks();
+  const dispatch = useTasksDispatch();
+  const { toast } = useToast();
+  const [newSubtask, setNewSubtask] = useState('');
+  const [isAddTagPopoverOpen, setIsAddTagPopoverOpen] = useState(false);
+  const [newTagName, setNewTagName] = useState('');
+
+  const form = useForm<TaskFormValues>({
+    resolver: zodResolver(taskSchema),
+  });
+
+  const {
+    register,
+    handleSubmit,
+    control,
+    reset,
+    watch,
+    formState: { errors, isSubmitting },
+  } = form;
+
+  useEffect(() => {
+    if (task && open) {
+      const dueDate = task.dueDate ? parseISO(task.dueDate) : undefined;
+      reset({ 
+        title: task.title,
+        description: task.description,
+        listId: task.listId,
+        dueDate: dueDate,
+        time: dueDate ? format(dueDate, 'HH:mm') : undefined,
+        duration: task.duration,
+        tagIds: task.tagIds || [],
+        subtasks: task.subtasks || [],
+        isMyDay: task.isMyDay,
+        isImportant: task.isImportant,
+       });
+    }
+  }, [open, task, reset]);
+
+
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: 'subtasks',
+  });
+
+  const selectedTags = watch('tagIds') || [];
+
+  const onSubmit = (data: TaskFormValues) => {
+    let dueDate: string | undefined = undefined;
+    
+    if (data.isMyDay && !data.dueDate) {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        dueDate = today.toISOString();
+    } else if (data.dueDate) {
+        const date = new Date(data.dueDate);
+        if (data.time && data.time !== '00:00') {
+            const [hours, minutes] = data.time.split(':');
+            date.setHours(parseInt(hours, 10), parseInt(minutes, 10));
+        } else {
+            // Keep original time if no new time is set, or reset if cleared
+            const originalDate = task.dueDate ? parseISO(task.dueDate) : new Date(date);
+            if(format(originalDate, 'HH:mm') !== '00:00' && !data.time) {
+                date.setHours(originalDate.getHours(), originalDate.getMinutes());
+            } else if (!data.time) {
+                date.setHours(0,0,0,0);
+            }
+        }
+        dueDate = date.toISOString();
+    }
+
+    const updatedTask: Task = {
+      ...task,
+      title: data.title,
+      description: data.description,
+      isMyDay: data.isMyDay,
+      isImportant: data.isImportant,
+      listId: data.listId,
+      dueDate: dueDate,
+      duration: data.duration,
+      tagIds: data.tagIds || [],
+      subtasks: (data.subtasks || []).map(st => ({...st, id: st.id || `SUB-${Date.now()}-${Math.random()}`})),
+    };
+
+    dispatch({ type: 'UPDATE_TASK', payload: updatedTask });
+    toast({
+      title: 'Task Updated',
+      description: `"${data.title}" has been updated.`,
+    });
+    onOpenChange(false);
+  };
+
+  const handleAddSubtask = () => {
+    if (newSubtask.trim() !== '') {
+      append({ id: `SUB-${Date.now()}-${Math.random()}`, title: newSubtask.trim(), completed: false });
+      setNewSubtask('');
+    }
+  };
+
+  const handleAddNewTag = () => {
+    if (newTagName.trim()) {
+      const newTag: TagType = {
+        id: newTagName.trim().toLowerCase().replace(/\s+/g, '-'),
+        label: newTagName.trim(),
+      };
+      dispatch({ type: 'ADD_TAG', payload: newTag });
+      setNewTagName('');
+      setIsAddTagPopoverOpen(false);
+    }
+  };
+
+  const regularLists = lists.filter(l => !['my-day', 'important'].includes(l.id));
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Edit task</DialogTitle>
+          <DialogDescription>
+            Make changes to your task here. Click save when you're done.
+          </DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <div className="space-y-2">
+            <Input id="title" {...register('title')} placeholder="e.g. Finalize presentation" className="text-base" />
+            {errors.title && <p className="text-sm text-destructive">{errors.title.message}</p>}
+            <Textarea id="description" {...register('description')} placeholder="Add more details..." />
+          </div>
+
+          <div className="flex items-center space-x-4">
+                <Controller
+                    name="isMyDay"
+                    control={control}
+                    render={({ field }) => (
+                        <div className="flex items-center space-x-2">
+                            <Switch id="isMyDay-edit" checked={field.value} onCheckedChange={field.onChange} />
+                            <Label htmlFor="isMyDay-edit" className="flex items-center gap-2 cursor-pointer">
+                                <Sun className="h-4 w-4 text-yellow-500" />
+                                Add to My Day
+                            </Label>
+                        </div>
+                    )}
+                />
+                <Controller
+                    name="isImportant"
+                    control={control}
+                    render={({ field }) => (
+                        <div className="flex items-center space-x-2">
+                            <Switch id="isImportant-edit" checked={field.value} onCheckedChange={field.onChange} />
+                            <Label htmlFor="isImportant-edit" className="flex items-center gap-2 cursor-pointer">
+                                <Star className="h-4 w-4 text-gray-500" />
+                                Mark as Important
+                            </Label>
+                        </div>
+                    )}
+                />
+            </div>
+
+          <div className="grid grid-cols-2 gap-2">
+             <Controller
+              name="dueDate"
+              control={control}
+              render={({ field }) => (
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant={'outline'}
+                      size="sm"
+                      className={cn(
+                        'w-full justify-start text-left font-normal',
+                        !field.value && 'text-muted-foreground'
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {field.value ? format(field.value, 'MMM d, yyyy') : <span>Due date</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar
+                      mode="single"
+                      selected={field.value}
+                      onSelect={field.onChange}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              )}
+            />
+            <Controller
+                name="time"
+                control={control}
+                render={({field}) => (
+                    <Input 
+                        type="time"
+                        className="h-9"
+                        {...field}
+                    />
+                )}
+            />
+          </div>
+
+        <div className="grid grid-cols-2 gap-2">
+            <Controller
+                name="duration"
+                control={control}
+                render={({ field: { onChange, ...field } }) => (
+                    <div className="relative">
+                         <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input 
+                            type="number"
+                            placeholder="Duration (mins)"
+                            className="pl-9"
+                             onChange={e => onChange(e.target.value === '' ? undefined : +e.target.value)}
+                            {...field}
+                        />
+                    </div>
+                )}
+            />
+            <Controller
+              name="listId"
+              control={control}
+              render={({ field }) => (
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <SelectTrigger className="w-full h-9 px-3">
+                     <div className="flex items-center gap-2">
+                        <List className="h-4 w-4" />
+                        <SelectValue placeholder="Select a list" />
+                     </div>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {regularLists.map((list) => (
+                      <SelectItem key={list.id} value={list.id}>
+                        {list.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            />
+        </div>
+        {errors.listId && <p className="text-sm text-destructive">{errors.listId.message}</p>}
+        {errors.duration && <p className="text-sm text-destructive">{errors.duration.message}</p>}
+
+
+        <div>
+            <div className="flex items-center gap-2 mb-2">
+                <Tag className="h-4 w-4 text-muted-foreground" />
+                <h4 className="text-sm font-medium">Tags</h4>
+            </div>
+             <Controller
+                name="tagIds"
+                control={control}
+                render={({ field }) => (
+                    <div className="flex flex-wrap gap-2">
+                    {tags.map(tag => (
+                        <button
+                            type="button"
+                            key={tag.id}
+                            onClick={() => {
+                                const newValue = selectedTags.includes(tag.id)
+                                ? selectedTags.filter(id => id !== tag.id)
+                                : [...selectedTags, tag.id];
+                                field.onChange(newValue);
+                            }}
+                            className={cn(
+                                "flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium border transition-colors",
+                                selectedTags.includes(tag.id)
+                                ? 'bg-muted border-transparent'
+                                : 'bg-transparent text-muted-foreground hover:bg-muted border-dashed'
+                            )}
+                        >
+                        {selectedTags.includes(tag.id) && <Check className="h-3 w-3" />}
+                        #{tag.label}
+                        </button>
+                    ))}
+                     <Popover open={isAddTagPopoverOpen} onOpenChange={setIsAddTagPopoverOpen}>
+                        <PopoverTrigger asChild>
+                           <Button type="button" variant="outline" size="sm" className="h-auto py-1 text-xs">
+                                <Plus className="mr-1 h-3 w-3" />
+                                New Tag
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-60">
+                            <div className="space-y-4">
+                                <h4 className="font-medium leading-none">Create a new tag</h4>
+                                <Input 
+                                    placeholder="Tag name" 
+                                    value={newTagName} 
+                                    onChange={(e) => setNewTagName(e.target.value)}
+                                />
+                                <Button onClick={handleAddNewTag} className="w-full">Create</Button>
+                            </div>
+                        </PopoverContent>
+                    </Popover>
+                    </div>
+                )}
+            />
+        </div>
+
+        <div>
+            <div className="flex items-center gap-2 mb-2">
+                <CheckSquare className="h-4 w-4 text-muted-foreground" />
+                <h4 className="text-sm font-medium">Subtasks</h4>
+            </div>
+            <ScrollArea className="h-40 rounded-md border">
+              <div className="p-4 space-y-2">
+                  {fields.map((field, index) => (
+                    <div key={field.id} className="flex items-center gap-2">
+                      <Controller
+                        name={`subtasks.${index}.completed`}
+                        control={control}
+                        render={({ field: checkboxField }) => (
+                           <Checkbox
+                            checked={checkboxField.value}
+                            onCheckedChange={checkboxField.onChange}
+                          />
+                        )}
+                      />
+                      <Input {...register(`subtasks.${index}.title`)} className="h-8" />
+                      <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)} className="h-8 w-8">
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
+                  ))}
+              </div>
+            </ScrollArea>
+             <div className="flex items-center gap-2 mt-2">
+                <Input
+                    value={newSubtask}
+                    onChange={(e) => setNewSubtask(e.target.value)}
+                    placeholder="Add a new subtask..."
+                    className="h-8"
+                    onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleAddSubtask();
+                        }
+                    }}
+                />
+                <Button type="button" size="sm" onClick={handleAddSubtask}>Add</Button>
+            </div>
+        </div>
+
+        <DialogFooter className="pt-4">
+            <Button variant="outline" type="button" onClick={() => onOpenChange(false)} disabled={isSubmitting}>Cancel</Button>
+            <Button type="submit" disabled={isSubmitting}>
+                <Save className="mr-2 h-4 w-4" />
+                {isSubmitting ? 'Saving...' : 'Save Changes'}
+            </Button>
+        </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
