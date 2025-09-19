@@ -364,40 +364,44 @@ export function EditTaskDialog({ open, onOpenChange, task }: EditTaskDialogProps
                     <CheckSquare className="h-4 w-4 text-muted-foreground" />
                     <h4 className="text-sm font-medium">Subtasks</h4>
                 </div>
-                <div className="max-h-40 space-y-2 rounded-md border p-4">
-                    {fields.map((field, index) => (
-                        <div key={field.id} className="flex items-center gap-2">
-                        <Controller
-                            name={`subtasks.${index}.completed`}
-                            control={control}
-                            render={({ field: checkboxField }) => (
-                            <Checkbox
-                                checked={checkboxField.value}
-                                onCheckedChange={checkboxField.onChange}
+                <div className="space-y-2 rounded-md border p-4">
+                    <ScrollArea className="max-h-28">
+                        <div className="space-y-2 pr-4">
+                            {fields.map((field, index) => (
+                                <div key={field.id} className="flex items-center gap-2">
+                                <Controller
+                                    name={`subtasks.${index}.completed`}
+                                    control={control}
+                                    render={({ field: checkboxField }) => (
+                                    <Checkbox
+                                        checked={checkboxField.value}
+                                        onCheckedChange={checkboxField.onChange}
+                                        />
+                                    )}
                                 />
-                            )}
-                        />
-                        <Input {...register(`subtasks.${index}.title`)} className="h-8" />
-                        <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)} className="h-8 w-8">
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
+                                <Input {...register(`subtasks.${index}.title`)} className="h-8" />
+                                <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)} className="h-8 w-8">
+                                    <Trash2 className="h-4 w-4 text-destructive" />
+                                </Button>
+                                </div>
+                            ))}
                         </div>
-                    ))}
-                </div>
-                <div className="flex items-center gap-2 mt-2">
-                    <Input
-                        value={newSubtask}
-                        onChange={(e) => setNewSubtask(e.target.value)}
-                        placeholder="Add a new subtask..."
-                        className="h-8"
-                        onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                                e.preventDefault();
-                                handleAddSubtask();
-                            }
-                        }}
-                    />
-                    <Button type="button" size="sm" onClick={handleAddSubtask}>Add</Button>
+                    </ScrollArea>
+                     <div className="flex items-center gap-2 pt-2">
+                        <Input
+                            value={newSubtask}
+                            onChange={(e) => setNewSubtask(e.target.value)}
+                            placeholder="Add a new subtask..."
+                            className="h-8"
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                    e.preventDefault();
+                                    handleAddSubtask();
+                                }
+                            }}
+                        />
+                        <Button type="button" size="sm" onClick={handleAddSubtask}>Add</Button>
+                    </div>
                 </div>
             </div>
             </div>
