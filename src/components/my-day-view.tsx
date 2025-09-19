@@ -9,6 +9,7 @@ import { Calendar } from 'lucide-react';
 import { DragDropContext, DropResult } from 'react-beautiful-dnd';
 import type { Task } from '@/lib/types';
 import { AppHeader } from '@/components/app-header';
+import { DndProvider } from './dnd-provider';
 
 
 export function MyDayView() {
@@ -80,49 +81,51 @@ export function MyDayView() {
   const completedTasks = myDayItems.filter((item): item is Task & {type: 'task'} => item.type === 'task' && item.completed);
   
   return (
-    <DragDropContext onDragEnd={onDragEnd}>
-      <AppHeader viewMode={viewMode} onSwitchViewMode={setViewMode} />
-      <div className="space-y-8 mt-6">
-        <div>
-          {scheduledItems.length > 0 && (
-             <div className="space-y-2">
-                <TaskList
-                  items={scheduledItems}
-                  viewMode={viewMode}
-                  droppableId="timed-items"
-                />
-             </div>
-          )}
-
-          {(allDayTasks.length > 0 || (myDayItems.length > 0 && scheduledItems.length === 0)) && (
-            <div className="mt-8">
-              <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
-                  <Calendar className="h-5 w-5" />
-                  All-day / Unscheduled
-              </h3>
-              <div className="space-y-2">
-                  <TaskList items={allDayTasks} droppableId="allday-tasks" viewMode={viewMode} />
-              </div>
-            </div>
-          )}
-
-          {myDayItems.length === 0 && (
-              <div className="text-center py-10 border-2 border-dashed rounded-lg">
-                  <p className="text-muted-foreground">Your day is clear.</p>
-                  <p className="text-muted-foreground text-sm">Add tasks from your lists to get started.</p>
-              </div>
-          )}
-
-          {completedTasks.length > 0 && (
-            <div className="pt-4 mt-8">
-                <h3 className="text-sm font-medium text-muted-foreground mb-2 px-4">Completed</h3>
+    <DndProvider>
+        <DragDropContext onDragEnd={onDragEnd}>
+        <AppHeader viewMode={viewMode} onSwitchViewMode={setViewMode} />
+        <div className="space-y-8 mt-6">
+            <div>
+            {scheduledItems.length > 0 && (
                 <div className="space-y-2">
-                    <TaskList items={completedTasks} droppableId="completed-tasks" isDropDisabled viewMode={viewMode}/>
+                    <TaskList
+                    items={scheduledItems}
+                    viewMode={viewMode}
+                    droppableId="timed-items"
+                    />
                 </div>
+            )}
+
+            {(allDayTasks.length > 0 || (myDayItems.length > 0 && scheduledItems.length === 0)) && (
+                <div className="mt-8">
+                <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
+                    <Calendar className="h-5 w-5" />
+                    All-day / Unscheduled
+                </h3>
+                <div className="space-y-2">
+                    <TaskList items={allDayTasks} droppableId="allday-tasks" viewMode={viewMode} />
+                </div>
+                </div>
+            )}
+
+            {myDayItems.length === 0 && (
+                <div className="text-center py-10 border-2 border-dashed rounded-lg">
+                    <p className="text-muted-foreground">Your day is clear.</p>
+                    <p className="text-muted-foreground text-sm">Add tasks from your lists to get started.</p>
+                </div>
+            )}
+
+            {completedTasks.length > 0 && (
+                <div className="pt-4 mt-8">
+                    <h3 className="text-sm font-medium text-muted-foreground mb-2 px-4">Completed</h3>
+                    <div className="space-y-2">
+                        <TaskList items={completedTasks} droppableId="completed-tasks" isDropDisabled viewMode={viewMode}/>
+                    </div>
+                </div>
+            )}
             </div>
-        )}
         </div>
-      </div>
-    </DragDropContext>
+        </DragDropContext>
+    </DndProvider>
   );
 }
