@@ -17,6 +17,7 @@ import { Calendar as CalendarPicker } from './ui/calendar';
 import { Draggable } from 'react-beautiful-dnd';
 import { useToast } from '@/hooks/use-toast';
 import { scheduleMyDayTasks } from '@/ai/flows/schedule-my-day-flow';
+import * as Lucide from 'lucide-react';
 
 type Item = (Task & { type: 'task' }) | (CalendarEvent & { type: 'event' });
 
@@ -341,7 +342,14 @@ export function TaskItem({ item, viewMode = 'detailed', index, isDragDisabled = 
 
   const renderCompactView = (provided?: any) => {
     const eventColorClass = event?.calendarId === 'work' ? 'border-blue-500' : 'border-green-500';
-    const EventIcon = event?.calendarId === 'work' ? Briefcase : (event ? Video : null);
+    let ItemIcon;
+
+    if (isTask) {
+        const taskList = getTaskList;
+        ItemIcon = Lucide[taskList?.icon as keyof typeof Lucide] || Lucide.List;
+    } else {
+        ItemIcon = event?.calendarId === 'work' ? Briefcase : (event ? Video : Lucide.List);
+    }
 
     const getTimeDisplay = () => {
         if (item.startTime) {
@@ -393,9 +401,9 @@ export function TaskItem({ item, viewMode = 'detailed', index, isDragDisabled = 
               data-interactive="true"
               onClick={(e) => e.stopPropagation()}
             />
-        ): (
-          EventIcon && <EventIcon className="h-5 w-5 text-muted-foreground flex-shrink-0" />
-        )}
+        ): null}
+        
+        {ItemIcon && <ItemIcon className="h-5 w-5 text-muted-foreground flex-shrink-0" />}
         
         <div className="flex-1" onClick={openEditDialog}>
             <p className={cn('font-medium', task?.completed && 'line-through text-muted-foreground')}>
