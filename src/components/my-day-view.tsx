@@ -1,150 +1,130 @@
 'use client';
 
-import { recommendMyDayTasks } from '@/ai/flows/my-day-task-recommendation';
+import { scheduleMyDayTasks } from '@/ai/flows/schedule-my-day-flow';
 import { useTasks, useTasksDispatch } from '@/hooks/use-tasks';
 import type { Task } from '@/lib/types';
-import { useEffect, useState, useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Button } from './ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-import { Lightbulb, Plus, Sparkles, Calendar } from 'lucide-react';
+import { Sparkles, Calendar } from 'lucide-react';
 import { TaskList } from './task-list';
+import { format, parseISO, isToday, set } from 'date-fns';
+import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from './ui/skeleton';
-import { format, parseISO, isToday } from 'date-fns';
 
 export function MyDayView() {
   const { tasks } = useTasks();
   const dispatch = useTasksDispatch();
-  const [recommendedTasks, setRecommendedTasks] = useState<Task[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchRecommendations = async () => {
-      setIsLoading(true);
-      try {
-        const availableTasks = tasks.filter((t) => !t.completed && !t.isMyDay);
-        const input = {
-          userHabits: 'Prefers to work on deep work in the morning and smaller tasks in the afternoon.',
-          taskPriorities: 'Urgent tasks and work related to "Project Aqua" are high priority.',
-          availableTasks: JSON.stringify(availableTasks.map(t => ({id: t.id, title: t.title, dueDate: t.dueDate, description: t.description}))),
-        };
-
-        const result = await recommendMyDayTasks(input);
-        const recommendedTitles = result.recommendedTasks.split(',').map(t => t.trim());
-        
-        const filteredTasks = availableTasks.filter(t => recommendedTitles.includes(t.title));
-        setRecommendedTasks(filteredTasks);
-      } catch (error) {
-        console.error('Failed to fetch task recommendations:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchRecommendations();
-  }, [tasks]);
+  const { toast } = useToast();
+  const [isScheduling, setIsScheduling] = useState(false);
 
   const myDayTasks = useMemo(() => {
     return tasks
-      .filter((task) => task.isMyDay && task.dueDate && isToday(parseISO(task.dueDate)))
+      .filter((task) => task.isMyDay)
       .sort((a, b) => {
+        // Incomplete tasks come first
         if (a.completed && !b.completed) return 1;
         if (!a.completed && b.completed) return -1;
-        
+
+        // Then, sort by time (if available)
         const aHasTime = a.dueDate && format(parseISO(a.dueDate), 'HH:mm') !== '00:00';
         const bHasTime = b.dueDate && format(parseISO(b.dueDate), 'HH:mm') !== '00:00';
 
         if (aHasTime && bHasTime) return parseISO(a.dueDate!).getTime() - parseISO(b.dueDate!).getTime();
-        if (aHasTime) return -1;
+        if (aHasTime) return -1; // Tasks with time come before all-day tasks
         if (bHasTime) return 1;
-        
-        const aIsUrgent = a.isImportant;
-        const bIsUrgent = b.isImportant;
-        if (aIsUrgent && !bIsUrgent) return -1;
-        if (!aIsUrgent && bIsUrgent) return 1;
 
+        // Then, sort by importance
+        if (a.isImportant && !b.isImportant) return -1;
+        if (!a.isImportant && b.isImportant) return 1;
+        
+        // Finally, sort by creation date
         return parseISO(b.createdAt).getTime() - parseISO(a.createdAt).getTime();
       });
   }, [tasks]);
 
-  const handleAddTaskToMyDay = (task: Task) => {
-    const updatedTask = { ...task, isMyDay: true };
-     if (!updatedTask.dueDate) {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0); // Set to start of day for an "all-day" task
-        updatedTask.dueDate = today.toISOString();
+  const handleAiSchedule = async () => {
+    setIsScheduling(true);
+    toast({ title: '🤖 Scheduling your day...', description: 'The AI is working its magic to organize your tasks.' });
+    try {
+      const tasksToSchedule = myDayTasks.filter(t => !t.completed);
+      const input = {
+        userSchedule: 'Works from 8:30 to 11:30, breaks for lunch, works again from 13:00 to 17:30, breaks for dinner, and is free from 18:30 to 22:00.',
+        tasks: tasksToSchedule.map(t => ({
+          id: t.id,
+          title: t.title,
+          duration: t.duration,
+          isImportant: t.isImportant,
+          dueDate: t.dueDate,
+        })),
+        currentDate: new Date().toISOString(),
+      };
+
+      const result = await scheduleMyDayTasks(input);
+      
+      result.scheduledTasks.forEach(scheduledTask => {
+        const originalTask = tasks.find(t => t.id === scheduledTask.id);
+        if (originalTask) {
+          const updatedTask: Task = {
+            ...originalTask,
+            dueDate: scheduledTask.scheduledTime,
+          };
+          dispatch({ type: 'UPDATE_TASK', payload: updatedTask });
+        }
+      });
+      toast({ title: '✅ Day Scheduled!', description: 'Your tasks have been assigned a time.' });
+    } catch (error) {
+      console.error('Failed to schedule tasks:', error);
+      toast({ variant: 'destructive', title: ' scheduling failed', description: 'The AI could not schedule your tasks. Please try again.' });
+    } finally {
+      setIsScheduling(false);
     }
-    dispatch({ type: 'UPDATE_TASK', payload: updatedTask });
-    setRecommendedTasks(prev => prev.filter(t => t.id !== task.id));
   };
 
   const tasksWithTime = myDayTasks.filter(t => t.dueDate && format(parseISO(t.dueDate), 'HH:mm') !== '00:00');
-  const allDayTasks = useMemo(() => {
-    return tasks.filter(task => task.isMyDay && (!task.dueDate || format(parseISO(task.dueDate), 'HH:mm') === '00:00'))
-  }, [tasks]);
+  const allDayTasks = myDayTasks.filter(t => !t.dueDate || format(parseISO(t.dueDate), 'HH:mm') === '00:00');
   
   return (
     <div className="space-y-8">
-      <div>
-        <div className="divide-y divide-border rounded-lg border">
-          <TaskList tasks={tasksWithTime} variant="my-day" />
-        </div>
-
-        {allDayTasks.length > 0 && (
-          <div className="mt-8">
-            <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
-                <Calendar className="h-5 w-5" />
-                All-day
-            </h3>
-            <div className="divide-y divide-border rounded-lg border">
-                <TaskList tasks={allDayTasks} variant="my-day" />
-            </div>
-          </div>
-        )}
-
-        {myDayTasks.length === 0 && allDayTasks.length === 0 && (
-             <div className="text-center py-10 border-2 border-dashed rounded-lg">
-                <p className="text-muted-foreground">Your day is clear.</p>
-                <p className="text-muted-foreground text-sm">Add tasks from the suggestions below or create a new one.</p>
-            </div>
-        )}
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">My Day</h1>
+        <Button onClick={handleAiSchedule} disabled={isScheduling}>
+          <Sparkles className="mr-2 h-4 w-4" />
+          {isScheduling ? 'Scheduling...' : 'Smart Schedule'}
+        </Button>
       </div>
 
       <div>
-        <h2 className="flex items-center gap-2 text-2xl font-bold tracking-tight mb-4">
-          <Sparkles className="text-primary" />
-          Suggestions
-        </h2>
-        {isLoading ? (
+        {isScheduling && (
           <div className="space-y-2">
-            <Skeleton className="h-20 w-full" />
-            <Skeleton className="h-20 w-full" />
-            <Skeleton className="h-20 w-full" />
+            <Skeleton className="h-24 w-full" />
+            <Skeleton className="h-16 w-full" />
+            <Skeleton className="h-16 w-full" />
           </div>
-        ) : recommendedTasks.length > 0 ? (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {recommendedTasks.map((task) => (
-              <Card key={task.id} className="flex flex-col">
-                <CardHeader className="flex-row items-start justify-between pb-2">
-                  <CardTitle className="text-base font-medium leading-tight">{task.title}</CardTitle>
-                   <Button size="sm" variant="ghost" onClick={() => handleAddTaskToMyDay(task)}>
-                    <Plus className="mr-2 h-4 w-4" />
-                    Add
-                  </Button>
-                </CardHeader>
-                <CardContent className="text-sm text-muted-foreground flex-grow pt-0">
-                   {task.description}
-                </CardContent>
-              </Card>
-            ))}
+        )}
+
+        {!isScheduling && tasksWithTime.length > 0 && (
+          <div className="divide-y divide-border rounded-lg border">
+            <TaskList tasks={tasksWithTime} variant="my-day" />
           </div>
-        ) : (
-          <div className="text-center py-10 border-2 border-dashed rounded-lg">
-            <Lightbulb className="mx-auto h-12 w-12 text-muted-foreground" />
-            <h3 className="mt-4 text-lg font-semibold">No suggestions right now</h3>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Add more tasks to get personalized recommendations.
-            </p>
+        )}
+
+        {!isScheduling && allDayTasks.length > 0 && (
+          <div className="mt-8">
+            <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
+                <Calendar className="h-5 w-5" />
+                All-day / Unscheduled
+            </h3>
+            <div className="divide-y divide-border rounded-lg border">
+                <TaskList tasks={allDayTasks} variant="default" />
+            </div>
           </div>
+        )}
+
+        {!isScheduling && myDayTasks.length === 0 && (
+             <div className="text-center py-10 border-2 border-dashed rounded-lg">
+                <p className="text-muted-foreground">Your day is clear.</p>
+                <p className="text-muted-foreground text-sm">Add tasks from your lists to get started.</p>
+            </div>
         )}
       </div>
     </div>

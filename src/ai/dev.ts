@@ -1,4 +1,4 @@
 import { config } from 'dotenv';
 config();
 
-import '@/ai/flows/my-day-task-recommendation.ts';
+import '@/ai/flows/schedule-my-day-flow.ts';
