@@ -6,10 +6,10 @@ import type { Task } from '@/lib/types';
 import { useEffect, useState, useMemo } from 'react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-import { Lightbulb, Plus, Sparkles } from 'lucide-react';
+import { Lightbulb, Plus, Sparkles, Calendar, GripVertical } from 'lucide-react';
 import { TaskList } from './task-list';
 import { Skeleton } from './ui/skeleton';
-import { parseISO } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 
 export function MyDayView() {
   const { tasks } = useTasks();
@@ -47,28 +47,21 @@ export function MyDayView() {
     return tasks
       .filter((task) => task.listId === 'my-day')
       .sort((a, b) => {
-        // Sort completed tasks to the bottom
         if (a.completed && !b.completed) return 1;
         if (!a.completed && b.completed) return -1;
-
-        // 1. Sort by due date (time)
-        if (a.dueDate && b.dueDate) {
-          const aDate = parseISO(a.dueDate);
-          const bDate = parseISO(b.dueDate);
-          if (aDate.getTime() !== bDate.getTime()) {
-            return aDate.getTime() - bDate.getTime();
-          }
-        }
-        if (a.dueDate && !b.dueDate) return -1;
-        if (!a.dueDate && b.dueDate) return 1;
         
-        // 2. Sort by importance (urgent tag)
+        const aHasTime = a.dueDate && format(parseISO(a.dueDate), 'HH:mm') !== '00:00';
+        const bHasTime = b.dueDate && format(parseISO(b.dueDate), 'HH:mm') !== '00:00';
+
+        if (aHasTime && bHasTime) return parseISO(a.dueDate!).getTime() - parseISO(b.dueDate!).getTime();
+        if (aHasTime) return -1;
+        if (bHasTime) return 1;
+        
         const aIsUrgent = a.tagIds.includes('urgent');
         const bIsUrgent = b.tagIds.includes('urgent');
         if (aIsUrgent && !bIsUrgent) return -1;
         if (!aIsUrgent && bIsUrgent) return 1;
 
-        // 3. Sort by creation time
         return parseISO(a.createdAt).getTime() - parseISO(b.createdAt).getTime();
       });
   }, [tasks]);
@@ -77,13 +70,32 @@ export function MyDayView() {
     dispatch({ type: 'UPDATE_TASK', payload: { ...task, listId: 'my-day' } });
     setRecommendedTasks(prev => prev.filter(t => t.id !== task.id));
   };
+
+  const tasksWithTime = myDayTasks.filter(t => t.dueDate && format(parseISO(t.dueDate), 'HH:mm') !== '00:00');
+  const allDayTasks = myDayTasks.filter(t => !t.dueDate || format(parseISO(t.dueDate), 'HH:mm') === '00:00');
   
   return (
     <div className="space-y-8">
       <div>
         <h2 className="text-2xl font-bold tracking-tight mb-4">My Day</h2>
-        <TaskList tasks={myDayTasks} />
-        {myDayTasks.filter(t => !t.completed).length === 0 && (
+        
+        <div className="divide-y divide-border rounded-lg border">
+          <TaskList tasks={tasksWithTime} variant="my-day" />
+        </div>
+
+        {allDayTasks.length > 0 && (
+          <div className="mt-8">
+            <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
+                <Calendar className="h-5 w-5" />
+                All-day
+            </h3>
+            <div className="space-y-2">
+                <TaskList tasks={allDayTasks} variant="default" />
+            </div>
+          </div>
+        )}
+
+        {myDayTasks.length === 0 && (
              <div className="text-center py-10 border-2 border-dashed rounded-lg">
                 <p className="text-muted-foreground">Your day is clear.</p>
                 <p className="text-muted-foreground text-sm">Add tasks from the suggestions below or create a new one.</p>
@@ -106,14 +118,14 @@ export function MyDayView() {
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {recommendedTasks.map((task) => (
               <Card key={task.id} className="flex flex-col">
-                <CardHeader className="flex-row items-start justify-between">
+                <CardHeader className="flex-row items-start justify-between pb-2">
                   <CardTitle className="text-base font-medium leading-tight">{task.title}</CardTitle>
                    <Button size="sm" variant="ghost" onClick={() => handleAddTaskToMyDay(task)}>
                     <Plus className="mr-2 h-4 w-4" />
                     Add
                   </Button>
                 </CardHeader>
-                <CardContent className="text-sm text-muted-foreground flex-grow">
+                <CardContent className="text-sm text-muted-foreground flex-grow pt-0">
                    {task.description}
                 </CardContent>
               </Card>
