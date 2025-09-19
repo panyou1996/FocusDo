@@ -1,90 +1,43 @@
 'use client';
 
+import React, { useState, useMemo } from 'react';
 import { TaskList } from '@/components/task-list';
 import { useTasks } from '@/hooks/use-tasks';
 import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion';
-import {
-  eachWeekOfInterval,
-  endOfWeek,
-  format,
   isSameDay,
-  isSameWeek,
-  isToday,
-  isTomorrow,
   parseISO,
-  startOfWeek,
+  format,
 } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Calendar } from '@/components/ui/calendar';
+import { Button } from '@/components/ui/button';
 
 export default function CalendarPage() {
   const { tasks } = useTasks();
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
 
-  const tasksWithDueDate = tasks
-    .filter((task) => !!task.dueDate)
-    .sort((a, b) => parseISO(a.dueDate!).getTime() - parseISO(b.dueDate!).getTime());
+  const tasksWithDueDate = useMemo(() => tasks.filter((task) => !!task.dueDate), [tasks]);
 
-  if (tasksWithDueDate.length === 0) {
+  const tasksOnSelectedDate = useMemo(() => {
+    if (!selectedDate) return [];
+    return tasksWithDueDate.filter((task) =>
+      isSameDay(parseISO(task.dueDate!), selectedDate)
+    );
+  }, [selectedDate, tasksWithDueDate]);
+  
+  const daysWithTasks = useMemo(() => {
+    return tasksWithDueDate.map(task => parseISO(task.dueDate!));
+  }, [tasksWithDueDate]);
+
+  const DayWithDot = ({ day, date }: { day: React.ReactElement, date: Date }) => {
+    const hasTasks = daysWithTasks.some(taskDate => isSameDay(taskDate, date));
     return (
-      <div className="text-center py-10 border-2 border-dashed rounded-lg">
-        <p className="text-muted-foreground">No tasks with due dates yet.</p>
-        <p className="text-sm text-muted-foreground">
-          Add due dates to your tasks to see them here.
-        </p>
+      <div className="relative">
+        {day}
+        {hasTasks && <div className="absolute bottom-1 left-1/2 -translate-x-1/2 h-1.5 w-1.5 rounded-full bg-primary" />}
       </div>
     );
-  }
-
-  const firstTaskDate = parseISO(tasksWithDueDate[0].dueDate!);
-  const lastTaskDate = parseISO(
-    tasksWithDueDate[tasksWithDueDate.length - 1].dueDate!
-  );
-
-  const weeks = eachWeekOfInterval(
-    {
-      start: firstTaskDate,
-      end: lastTaskDate,
-    },
-    { weekStartsOn: 1 }
-  );
-
-  const tasksByWeek = weeks.map((weekStart) => {
-    const weekEnd = endOfWeek(weekStart, { weekStartsOn: 1 });
-    const weekTasks = tasksWithDueDate.filter((task) =>
-      isSameWeek(parseISO(task.dueDate!), weekStart, { weekStartsOn: 1 })
-    );
-
-    const tasksByDay = weekTasks.reduce<Record<string, { label: string; tasks: typeof weekTasks }>>(
-      (acc, task) => {
-        const dueDate = parseISO(task.dueDate!);
-        const dayKey = format(dueDate, 'yyyy-MM-dd');
-
-        if (!acc[dayKey]) {
-          let label = format(dueDate, 'MMMM d, yyyy');
-          if (isToday(dueDate)) label = 'Today';
-          if (isTomorrow(dueDate)) label = 'Tomorrow';
-          acc[dayKey] = { label, tasks: [] };
-        }
-        acc[dayKey].tasks.push(task);
-        return acc;
-      },
-      {}
-    );
-
-    return {
-      weekStart,
-      weekEnd,
-      weekTasks,
-      tasksByDay,
-    };
-  });
-  
-  const today = new Date();
-  const currentWeekValue = `week-${format(today, 'yyyy-ww')}`;
+  };
 
   return (
     <Card>
@@ -92,30 +45,53 @@ export default function CalendarPage() {
         <CardTitle>Calendar</CardTitle>
       </CardHeader>
       <CardContent>
-        <Accordion type="single" collapsible defaultValue={currentWeekValue} className="w-full">
-          {tasksByWeek.map(({ weekStart, weekEnd, tasksByDay }, index) => (
-            <AccordionItem value={`week-${format(weekStart, 'yyyy-ww')}`} key={index}>
-              <AccordionTrigger>
-                <div className="flex w-full justify-between items-center pr-4">
-                    <span className="font-semibold">
-                    {format(weekStart, 'MMM d')} - {format(weekEnd, 'MMM d, yyyy')}
-                    </span>
-                    <span className="text-sm text-muted-foreground">
-                        {Object.values(tasksByDay).reduce((sum, day) => sum + day.tasks.length, 0)} tasks
-                    </span>
+        <div className="grid md:grid-cols-[280px_1fr] gap-8">
+          <div>
+            <Calendar
+              mode="single"
+              selected={selectedDate}
+              onSelect={setSelectedDate}
+              className="rounded-md border"
+              components={{
+                Day: ({ date, displayMonth }) => {
+                  const day = <Button variant="ghost" size="icon" className="w-9 h-9">{date.getDate()}</Button>
+                  if (displayMonth !== date) {
+                     return <div />;
+                  }
+                  return <DayWithDot day={day} date={date} />;
+                }
+              }}
+               modifiers={{
+                hasTasks: daysWithTasks,
+              }}
+              modifiersStyles={{
+                // This is a workaround to pass data to Day component.
+                // We use a non-existent style to avoid affecting the look.
+                hasTasks: { dummy: 'dummy' }
+              }}
+            />
+          </div>
+          <div className="space-y-4">
+            {selectedDate ? (
+                <div>
+                    <h2 className="text-xl font-semibold mb-4">
+                        Tasks for {format(selectedDate, 'MMMM d, yyyy')}
+                    </h2>
+                    {tasksOnSelectedDate.length > 0 ? (
+                        <TaskList tasks={tasksOnSelectedDate} />
+                    ) : (
+                        <div className="text-center py-10 border-2 border-dashed rounded-lg">
+                            <p className="text-muted-foreground">No tasks for this day.</p>
+                        </div>
+                    )}
                 </div>
-              </AccordionTrigger>
-              <AccordionContent className="space-y-6 pl-2">
-                {Object.entries(tasksByDay).map(([day, {label, tasks}]) => (
-                    <div key={day}>
-                        <h3 className="text-md font-semibold mb-2">{label}</h3>
-                        <TaskList tasks={tasks} />
-                    </div>
-                ))}
-              </AccordionContent>
-            </AccordionItem>
-          ))}
-        </Accordion>
+            ) : (
+                <div className="text-center py-10 border-2 border-dashed rounded-lg flex items-center justify-center h-full">
+                    <p className="text-muted-foreground">Select a day from the calendar to see tasks.</p>
+                </div>
+            )}
+          </div>
+        </div>
       </CardContent>
     </Card>
   );
