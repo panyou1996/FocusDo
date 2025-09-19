@@ -171,7 +171,7 @@ export function EditTaskDialog({ open, onOpenChange, task }: EditTaskDialogProps
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg max-h-[85vh] flex flex-col">
-        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col h-full">
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col h-full overflow-hidden">
             <DialogHeader>
             <DialogTitle>Edit task</DialogTitle>
             <DialogDescription>
@@ -179,7 +179,7 @@ export function EditTaskDialog({ open, onOpenChange, task }: EditTaskDialogProps
             </DialogDescription>
             </DialogHeader>
             <ScrollArea className="flex-1 my-4 pr-6 -mr-6">
-                <div className="space-y-4 pr-1">
+                <div className="space-y-4 pr-1 pb-6">
                 <div className="space-y-2">
                     <Input id="title" {...register('title')} placeholder="e.g. Finalize presentation" className="text-base" />
                     {errors.title && <p className="text-sm text-destructive">{errors.title.message}</p>}
