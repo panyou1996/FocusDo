@@ -46,6 +46,22 @@ export function MainSidebar() {
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
+            <SidebarMenuButton asChild isActive={pathname.startsWith('/lists/important')} tooltip="Important">
+              <Link href="/lists/important">
+                <Lucide.Star />
+                <span>Important</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+           <SidebarMenuItem>
+            <SidebarMenuButton asChild isActive={pathname.startsWith('/lists/tasks')} tooltip="Tasks">
+              <Link href="/lists/tasks">
+                <Lucide.CheckSquare />
+                <span>Tasks</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
             <SidebarMenuButton asChild isActive={pathname.startsWith('/calendar')} tooltip="Calendar">
               <Link href="/calendar">
                 <Lucide.CalendarDays />
@@ -60,7 +76,7 @@ export function MainSidebar() {
         <SidebarGroup>
           <SidebarGroupLabel>Lists</SidebarGroupLabel>
           <SidebarMenu>
-            {lists.filter(l => !['my-day'].includes(l.id)).map((list) => {
+            {lists.filter(l => !['my-day', 'important', 'tasks'].includes(l.id)).map((list) => {
               const Icon = Lucide[list.icon as keyof typeof Lucide] || Lucide.List;
               return (
                 <SidebarMenuItem key={list.id}>

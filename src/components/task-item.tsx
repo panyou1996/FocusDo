@@ -2,7 +2,7 @@
 import type { Task } from '@/lib/types';
 import { useTasks, useTasksDispatch } from '@/hooks/use-tasks';
 import { Checkbox } from './ui/checkbox';
-import { cn, getTagColorClasses } from '@/lib/utils';
+import { cn, getTagColorClasses, getTagColorName } from '@/lib/utils';
 import { format, isToday, isTomorrow, parseISO } from 'date-fns';
 import { Badge } from './ui/badge';
 import { Progress } from './ui/progress';
@@ -43,14 +43,22 @@ export function TaskItem({ task }: TaskItemProps) {
   const totalSubtasks = task.subtasks?.length || 0;
   const subtaskProgress = totalSubtasks > 0 ? (completedSubtasks / totalSubtasks) * 100 : 0;
 
+  const taskTags = getTaskTags();
+  const primaryTagColor = taskTags.length > 0 ? getTagColorName(taskTags[0].color) : 'gray';
+
 
   return (
     <div
       className={cn(
-        'group flex flex-col gap-4 rounded-lg border bg-card p-4 text-card-foreground shadow-sm transition-all hover:shadow-md animate-in fade-in-50',
+        'group relative flex flex-col gap-4 rounded-lg border bg-card p-4 text-card-foreground shadow-sm transition-all hover:shadow-md animate-in fade-in-50',
         task.completed && 'bg-card/60 opacity-70'
       )}
     >
+      <div 
+        className="absolute left-0 top-0 h-full w-1 rounded-l-lg"
+        style={{ backgroundColor: primaryTagColor !== 'gray' ? `hsl(var(--${primaryTagColor}-500))` : 'transparent' }}
+      ></div>
+
         <div className="flex items-start gap-4">
             <div className="flex flex-col items-center gap-2 pt-1">
                 <Checkbox
@@ -92,7 +100,7 @@ export function TaskItem({ task }: TaskItemProps) {
                     )}
                 </div>
                 <div className="mt-2 flex items-center gap-2">
-                    {getTaskTags().map((tag) => (
+                    {taskTags.map((tag) => (
                         <Badge key={tag.id} variant="outline" className={cn("text-xs font-normal border", getTagColorClasses(tag.color))}>
                             #{tag.label}
                         </Badge>

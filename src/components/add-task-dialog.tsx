@@ -23,7 +23,7 @@ import {
   SelectValue,
 } from './ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
-import { Calendar as CalendarIcon, List, Plus, Tag, Trash2, X, Clock, CheckSquare } from 'lucide-react';
+import { Calendar as CalendarIcon, List, Plus, Tag, Trash2, X, Clock, CheckSquare, Check } from 'lucide-react';
 import { Calendar } from './ui/calendar';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
@@ -31,6 +31,7 @@ import { cn, getTagColorClasses } from '@/lib/utils';
 import React, { useState } from 'react';
 import { Checkbox } from './ui/checkbox';
 import { Badge } from './ui/badge';
+import { ScrollArea } from './ui/scroll-area';
 
 const subtaskSchema = z.object({
   title: z.string().min(1, 'Subtask title cannot be empty.'),
@@ -284,31 +285,33 @@ export function AddTaskDialog({ open, onOpenChange, defaultListId }: AddTaskDial
                 <CheckSquare className="h-4 w-4 text-muted-foreground" />
                 <h4 className="text-sm font-medium">Subtasks</h4>
             </div>
-            <div className="space-y-2">
-                {fields.map((field, index) => (
-                  <div key={field.id} className="flex items-center gap-2">
-                    <Checkbox checked={field.completed} disabled />
-                    <Input {...register(`subtasks.${index}.title`)} className="h-8" />
-                    <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)} className="h-8 w-8">
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
-                  </div>
-                ))}
-                 <div className="flex items-center gap-2">
-                    <Input
-                        value={newSubtask}
-                        onChange={(e) => setNewSubtask(e.target.value)}
-                        placeholder="Add a new subtask..."
-                        className="h-8"
-                        onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                                e.preventDefault();
-                                handleAddSubtask();
-                            }
-                        }}
-                    />
-                    <Button type="button" size="sm" onClick={handleAddSubtask}>Add</Button>
-                </div>
+            <ScrollArea className="h-40 rounded-md border">
+              <div className="p-4 space-y-2">
+                  {fields.map((field, index) => (
+                    <div key={field.id} className="flex items-center gap-2">
+                      <Checkbox checked={field.completed} disabled />
+                      <Input {...register(`subtasks.${index}.title`)} className="h-8" />
+                      <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)} className="h-8 w-8">
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
+                  ))}
+              </div>
+            </ScrollArea>
+             <div className="flex items-center gap-2 mt-2">
+                <Input
+                    value={newSubtask}
+                    onChange={(e) => setNewSubtask(e.target.value)}
+                    placeholder="Add a new subtask..."
+                    className="h-8"
+                    onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleAddSubtask();
+                        }
+                    }}
+                />
+                <Button type="button" size="sm" onClick={handleAddSubtask}>Add</Button>
             </div>
         </div>
 
