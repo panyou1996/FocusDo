@@ -20,11 +20,13 @@ interface TaskItemProps {
   variant?: 'default' | 'my-day';
 }
 
-const TimeBadge = ({ date }: { date: string }) => (
-    <div className="flex items-center justify-center rounded-md bg-muted px-2 py-1 text-sm font-semibold w-20">
-        <span>{format(parseISO(date), 'HH:mm')}</span>
-    </div>
-);
+const TimeBadge = ({ date }: { date: string }) => {
+    return (
+        <div className="flex items-center justify-center rounded-md bg-muted px-2 py-1 text-sm font-semibold w-20">
+            <span>{format(parseISO(date), 'HH:mm')}</span>
+        </div>
+    );
+};
 
 
 export function TaskItem({ task, variant = 'default' }: TaskItemProps) {
@@ -54,12 +56,12 @@ export function TaskItem({ task, variant = 'default' }: TaskItemProps) {
   const handleStartTimeChange = (e: React.FocusEvent<HTMLInputElement>) => {
     const time = e.target.value;
     if (time.match(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/)) {
-        const date = new Date();
+        const date = task.startTime ? parseISO(task.startTime) : new Date();
         const [hours, minutes] = time.split(':');
         date.setHours(parseInt(hours, 10));
         date.setMinutes(parseInt(minutes, 10));
         dispatch({ type: 'UPDATE_TASK', payload: { ...task, startTime: date.toISOString() } });
-    } else {
+    } else if (time === '') {
         dispatch({ type: 'UPDATE_TASK', payload: { ...task, startTime: undefined } });
     }
   };
@@ -109,9 +111,9 @@ export function TaskItem({ task, variant = 'default' }: TaskItemProps) {
   const renderCard = () => (
     <div
       className={cn(
-        'group relative flex flex-col gap-2 rounded-lg border shadow-sm transition-all hover:shadow-md animate-in fade-in-50 p-3 text-card-foreground',
+        'group relative flex flex-col gap-2 rounded-lg border bg-card shadow-sm transition-all hover:shadow-md animate-in fade-in-50 p-3',
         getListColorClasses(taskList?.color),
-        task.completed && 'opacity-70'
+        task.completed && 'bg-card/60 dark:bg-card/40 opacity-60'
       )}
     >
         <div className="flex items-start gap-3">
@@ -172,7 +174,7 @@ export function TaskItem({ task, variant = 'default' }: TaskItemProps) {
                         </PopoverContent>
                     </Popover>
 
-                    { task.isMyDay && !(variant === 'my-day' && task.startTime) && (
+                    { task.isMyDay && variant !== 'my-day' && (
                         <Popover>
                             <PopoverTrigger asChild>
                                 <button
@@ -260,19 +262,52 @@ export function TaskItem({ task, variant = 'default' }: TaskItemProps) {
   );
 
 
+  const renderMyDayItem = () => {
+    const timeComponent = (
+        <Popover>
+            <PopoverTrigger asChild>
+                <div 
+                  data-interactive="true" 
+                  className={cn(
+                    'flex items-center justify-center rounded-md w-20 h-8 text-sm font-semibold cursor-pointer',
+                    task.startTime ? 'bg-muted' : 'border-2 border-dashed text-muted-foreground hover:bg-muted'
+                  )}
+                >
+                    {task.startTime ? (
+                        <span>{format(parseISO(task.startTime), 'HH:mm')}</span>
+                    ) : (
+                        <div className="flex items-center gap-1.5">
+                            <Clock className="h-3.5 w-3.5" />
+                            <span>Add</span>
+                        </div>
+                    )}
+                </div>
+            </PopoverTrigger>
+            <PopoverContent className="w-48 p-2">
+                <div className="flex gap-2">
+                    <Input 
+                        type="text"
+                        placeholder="HH:MM"
+                        defaultValue={task.startTime ? format(parseISO(task.startTime), 'HH:mm') : ''}
+                        onBlur={handleStartTimeChange}
+                    />
+                </div>
+            </PopoverContent>
+        </Popover>
+    );
+
+    return (
+      <div className="flex items-center gap-4">
+        {timeComponent}
+        <div className="flex-1">{renderCard()}</div>
+      </div>
+    );
+  };
+  
   return (
     <>
-    {variant === 'my-day' && task.startTime ? (
-        <div className="flex items-center gap-4">
-            <TimeBadge date={task.startTime} />
-            <div className="flex-1">
-                {renderCard()}
-            </div>
-        </div>
-    ) : (
-        renderCard()
-    )}
-    <EditTaskDialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen} task={task} />
+      {variant === 'my-day' ? renderMyDayItem() : renderCard()}
+      <EditTaskDialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen} task={task} />
     </>
   );
 }
