@@ -9,7 +9,7 @@ import { Progress } from './ui/progress';
 import { Clock, Sun, X, Calendar, GripVertical, Star } from 'lucide-react';
 import { Button } from './ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Input } from './ui/input';
 
 interface TaskItemProps {
@@ -37,9 +37,9 @@ export function TaskItem({ task, variant = 'default' }: TaskItemProps) {
   const toggleMyDay = () => {
     const updatedTask = { ...task, isMyDay: !task.isMyDay };
     if (updatedTask.isMyDay && !updatedTask.dueDate) {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      updatedTask.dueDate = today.toISOString();
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // Set to start of day for an "all-day" task
+        updatedTask.dueDate = today.toISOString();
     }
     dispatch({ type: 'UPDATE_TASK', payload: updatedTask });
   };
@@ -64,9 +64,9 @@ export function TaskItem({ task, variant = 'default' }: TaskItemProps) {
     return tags.filter(tag => task.tagIds.includes(tag.id));
   };
   
-  const getTaskList = () => {
+  const getTaskList = useMemo(() => {
     return lists.find(list => list.id === task.listId);
-  }
+  }, [task.listId, lists]);
 
   const getDueDateLabel = () => {
     if (!task.dueDate) return null;
@@ -81,7 +81,7 @@ export function TaskItem({ task, variant = 'default' }: TaskItemProps) {
   const totalSubtasks = task.subtasks?.length || 0;
   const subtaskProgress = totalSubtasks > 0 ? (completedSubtasks / totalSubtasks) * 100 : 0;
   const taskTags = getTaskTags();
-  const taskList = getTaskList();
+  const taskList = getTaskList;
 
   const hasTime = task.dueDate && format(parseISO(task.dueDate), 'HH:mm') !== '00:00';
 
