@@ -22,7 +22,7 @@ import * as Lucide from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Separator } from './ui/separator';
 import { Button } from './ui/button';
-import { MoreHorizontal, Plus, Trash2, Edit } from 'lucide-react';
+import { MoreHorizontal, Plus, Trash2, Edit, Clock } from 'lucide-react';
 import React, { useState } from 'react';
 import { AddListDialog } from './add-list-dialog';
 import { getSidebarListColorClasses } from '@/lib/utils';
@@ -88,6 +88,14 @@ export function MainSidebar() {
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
+             <SidebarMenuItem>
+              <SidebarMenuButton asChild isActive={pathname.startsWith('/upcoming')} tooltip="Upcoming">
+                <Link href="/upcoming">
+                  <Clock />
+                  <span>Upcoming</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton asChild isActive={pathname.startsWith('/calendar')} tooltip="Calendar">
                 <Link href="/calendar">
@@ -126,9 +134,9 @@ export function MainSidebar() {
                         <span>{list.title}</span>
                       </Link>
                     </SidebarMenuButton>
-                    <DropdownMenu>
+                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <SidebarMenuAction showOnHover>
+                         <SidebarMenuAction showOnHover>
                             <MoreHorizontal />
                         </SidebarMenuAction>
                       </DropdownMenuTrigger>

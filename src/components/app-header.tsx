@@ -109,6 +109,9 @@ export function AppHeader() {
      if (pathname.startsWith('/calendar')) {
       return 'Calendar';
     }
+    if (pathname.startsWith('/upcoming')) {
+      return 'Upcoming';
+    }
     return 'AquaDo';
   };
 
