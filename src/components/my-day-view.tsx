@@ -119,7 +119,7 @@ export function MyDayView() {
                 <div className="pt-4 mt-8">
                     <h3 className="text-sm font-medium text-muted-foreground mb-2 px-4">Completed</h3>
                     <div className="space-y-2">
-                        <TaskList items={completedTasks} droppableId="completed-tasks" isDropDisabled viewMode={viewMode}/>
+                        <TaskList items={completedTasks} droppableId="completed-tasks" isDropDisabled={true} viewMode={viewMode}/>
                     </div>
                 </div>
             )}
