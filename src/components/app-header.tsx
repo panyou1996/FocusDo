@@ -160,6 +160,11 @@ export function AppHeader({ viewMode, onSwitchViewMode }: AppHeaderProps) {
       <div className="flex items-center gap-2">
         <SidebarTrigger className="md:hidden" />
         <h1 className="text-xl font-bold">{getTitle()}</h1>
+         {pathname === '/my-day' && onSwitchViewMode && viewMode && (
+            <Button variant="outline" size="icon" onClick={handleViewModeToggle} aria-label="Switch view mode">
+                {viewMode === 'compact' ? <Rows className="h-4 w-4" /> : <View className="h-4 w-4" />}
+            </Button>
+        )}
       </div>
        {pathname === '/my-day' && (
         <div className="flex items-center gap-2">
@@ -167,11 +172,6 @@ export function AppHeader({ viewMode, onSwitchViewMode }: AppHeaderProps) {
                 <Sparkles className="mr-2 h-4 w-4" />
                 {isScheduling ? 'Scheduling...' : 'Smart Schedule'}
             </Button>
-            {onSwitchViewMode && viewMode && (
-                <Button variant="outline" size="icon" onClick={handleViewModeToggle} aria-label="Switch view mode">
-                    {viewMode === 'compact' ? <Rows className="h-4 w-4" /> : <View className="h-4 w-4" />}
-                </Button>
-            )}
             <Button variant="outline" size="icon" onClick={() => setIsSettingsOpen(true)} aria-label="Schedule Settings">
                 <Settings className="h-4 w-4" />
             </Button>
