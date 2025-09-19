@@ -128,10 +128,8 @@ export function MainSidebar() {
                     </SidebarMenuButton>
                      <SidebarMenuAction showOnHover>
                       <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <button>
-                            <MoreHorizontal />
-                          </button>
+                        <DropdownMenuTrigger>
+                          <MoreHorizontal />
                         </DropdownMenuTrigger>
                         <DropdownMenuContent>
                           <DropdownMenuItem onClick={() => handleEditClick(list)}>
