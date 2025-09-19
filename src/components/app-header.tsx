@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { SidebarTrigger } from './ui/sidebar';
 import { useTasks, useTasksDispatch } from '@/hooks/use-tasks';
 import { Button } from './ui/button';
-import { Sparkles, Settings } from 'lucide-react';
+import { Sparkles, Settings, PlusCircle } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { scheduleMyDayTasks } from '@/ai/flows/schedule-my-day-flow';
 import { useToast } from '@/hooks/use-toast';
@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import type { Task } from '@/lib/types';
+import { isToday, parseISO } from 'date-fns';
 
 const DEFAULT_SCHEDULE = 'Works from 8:30 to 11:30, breaks for lunch, works again from 13:00 to 17:30, breaks for dinner, and is free from 18:30 to 22:00.';
 
@@ -95,6 +96,26 @@ export function AppHeader() {
     }
   };
 
+  const handleAddDueTodayToMyDay = () => {
+    const dueTodayTasks = tasks.filter(task => 
+        task.dueDate && isToday(parseISO(task.dueDate)) && !task.isMyDay
+    );
+
+    if (dueTodayTasks.length === 0) {
+        toast({ title: 'All set!', description: "All of today's tasks are already in My Day." });
+        return;
+    }
+
+    dueTodayTasks.forEach(task => {
+        dispatch({ type: 'UPDATE_TASK', payload: { ...task, isMyDay: true } });
+    });
+
+    toast({
+        title: 'Tasks Added',
+        description: `${dueTodayTasks.length} task(s) due today have been added to My Day.`
+    });
+  }
+
 
   const getTitle = () => {
     if (pathname === '/my-day') return 'My Day';
@@ -133,6 +154,14 @@ export function AppHeader() {
             </Button>
         </div>
       )}
+       {pathname === '/upcoming' && (
+        <div className="flex items-center gap-2">
+            <Button onClick={handleAddDueTodayToMyDay}>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Add Today to My Day
+            </Button>
+        </div>
+       )}
     </header>
      <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
         <DialogContent>
