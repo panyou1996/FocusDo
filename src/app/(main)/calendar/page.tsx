@@ -7,6 +7,7 @@ import {
   isSameDay,
   parseISO,
   format,
+  isSameMonth,
 } from 'date-fns';
 import { Card, CardContent } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
@@ -51,8 +52,8 @@ export default function CalendarPage() {
               className="rounded-md border"
               components={{
                 Day: ({ date, displayMonth }) => {
-                  const day = <Button variant="ghost" size="icon" className="w-9 h-9">{date.getDate()}</Button>
-                  if (!displayMonth.isSame(date, 'month')) {
+                  const day = <Button variant="ghost" size="icon" className="w-9 h-9">{date.getDate()}</Button>;
+                  if (!isSameMonth(date, displayMonth)) {
                      return <div />;
                   }
                   return <DayWithDot day={day} date={date} />;
