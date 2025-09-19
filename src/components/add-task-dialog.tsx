@@ -23,7 +23,7 @@ import {
   SelectValue,
 } from './ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
-import { Calendar as CalendarIcon, List, Plus, Tag, Trash2, X, Clock, CheckSquare, Check } from 'lucide-react';
+import { Calendar as CalendarIcon, List, Plus, Tag, Trash2, X, Clock, CheckSquare, Check, Star, Sun } from 'lucide-react';
 import { Calendar } from './ui/calendar';
 import { format, isToday } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
@@ -32,6 +32,8 @@ import React, { useState } from 'react';
 import { Checkbox } from './ui/checkbox';
 import { Badge } from './ui/badge';
 import { ScrollArea } from './ui/scroll-area';
+import { Switch } from './ui/switch';
+import { Label } from './ui/label';
 
 const subtaskSchema = z.object({
   title: z.string().min(1, 'Subtask title cannot be empty.'),
@@ -47,6 +49,8 @@ const taskSchema = z.object({
   duration: z.coerce.number().int().positive().optional(),
   tagIds: z.array(z.string()).optional(),
   subtasks: z.array(subtaskSchema).optional(),
+  isMyDay: z.boolean().optional(),
+  isImportant: z.boolean().optional(),
 });
 
 type TaskFormValues = z.infer<typeof taskSchema>;
@@ -69,6 +73,8 @@ export function AddTaskDialog({ open, onOpenChange, defaultListId }: AddTaskDial
       listId: defaultListId || 'tasks',
       tagIds: [],
       subtasks: [],
+      isMyDay: false,
+      isImportant: false,
     }
   });
 
@@ -87,12 +93,17 @@ export function AddTaskDialog({ open, onOpenChange, defaultListId }: AddTaskDial
   });
 
   const selectedTags = watch('tagIds') || [];
+  const isMyDay = watch('isMyDay');
 
   const onSubmit = (data: TaskFormValues) => {
     let dueDate: string | undefined = undefined;
     let listId = data.listId;
 
-    if (data.dueDate) {
+    if (data.isMyDay && !data.dueDate) {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        dueDate = today.toISOString();
+    } else if (data.dueDate) {
         const date = new Date(data.dueDate);
         if (data.time) {
             const [hours, minutes] = data.time.split(':');
@@ -102,10 +113,10 @@ export function AddTaskDialog({ open, onOpenChange, defaultListId }: AddTaskDial
             date.setHours(0, 0, 0, 0);
         }
         dueDate = date.toISOString();
-
-        if (isToday(date)) {
-            listId = 'my-day';
-        }
+    }
+    
+    if (data.isMyDay) {
+        listId = 'my-day';
     }
 
 
@@ -114,6 +125,7 @@ export function AddTaskDialog({ open, onOpenChange, defaultListId }: AddTaskDial
       title: data.title,
       description: data.description,
       completed: false,
+      isImportant: data.isImportant,
       listId: listId,
       dueDate: dueDate,
       duration: data.duration,
@@ -141,6 +153,8 @@ export function AddTaskDialog({ open, onOpenChange, defaultListId }: AddTaskDial
         duration: undefined,
         tagIds: [],
         subtasks: [],
+        isMyDay: false,
+        isImportant: false,
        });
     }
   }, [open, defaultListId, reset]);
@@ -151,6 +165,8 @@ export function AddTaskDialog({ open, onOpenChange, defaultListId }: AddTaskDial
       setNewSubtask('');
     }
   };
+
+  const regularLists = lists.filter(l => !['my-day', 'important'].includes(l.id));
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -168,6 +184,35 @@ export function AddTaskDialog({ open, onOpenChange, defaultListId }: AddTaskDial
             <Textarea id="description" {...register('description')} placeholder="Add more details..." />
           </div>
 
+          <div className="flex items-center space-x-4">
+                <Controller
+                    name="isMyDay"
+                    control={control}
+                    render={({ field }) => (
+                        <div className="flex items-center space-x-2">
+                            <Switch id="isMyDay" checked={field.value} onCheckedChange={field.onChange} />
+                            <Label htmlFor="isMyDay" className="flex items-center gap-2 cursor-pointer">
+                                <Sun className="h-4 w-4 text-yellow-500" />
+                                Add to My Day
+                            </Label>
+                        </div>
+                    )}
+                />
+                <Controller
+                    name="isImportant"
+                    control={control}
+                    render={({ field }) => (
+                        <div className="flex items-center space-x-2">
+                            <Switch id="isImportant" checked={field.value} onCheckedChange={field.onChange} />
+                            <Label htmlFor="isImportant" className="flex items-center gap-2 cursor-pointer">
+                                <Star className="h-4 w-4 text-gray-500" />
+                                Mark as Important
+                            </Label>
+                        </div>
+                    )}
+                />
+            </div>
+
           <div className="grid grid-cols-2 gap-2">
              <Controller
               name="dueDate"
@@ -182,6 +227,7 @@ export function AddTaskDialog({ open, onOpenChange, defaultListId }: AddTaskDial
                         'w-full justify-start text-left font-normal',
                         !field.value && 'text-muted-foreground'
                       )}
+                      disabled={isMyDay && !field.value}
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
                       {field.value ? format(field.value, 'MMM d, yyyy') : <span>Due date</span>}
@@ -206,6 +252,7 @@ export function AddTaskDialog({ open, onOpenChange, defaultListId }: AddTaskDial
                         type="time"
                         className="h-9"
                         {...field}
+                         disabled={isMyDay && !watch('dueDate')}
                     />
                 )}
             />
@@ -240,7 +287,7 @@ export function AddTaskDialog({ open, onOpenChange, defaultListId }: AddTaskDial
                      </div>
                   </SelectTrigger>
                   <SelectContent>
-                    {lists.map((list) => (
+                    {regularLists.map((list) => (
                       <SelectItem key={list.id} value={list.id}>
                         {list.title}
                       </SelectItem>

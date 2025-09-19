@@ -24,6 +24,7 @@ export type Task = {
   title: string;
   description?: string;
   completed: boolean;
+  isImportant?: boolean;
   dueDate?: string; // ISO string
   duration?: number; // in minutes
   listId: string;

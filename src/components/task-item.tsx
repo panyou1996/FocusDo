@@ -6,7 +6,7 @@ import { cn, getTagColorClasses } from '@/lib/utils';
 import { format, isToday, isTomorrow, parseISO } from 'date-fns';
 import { Badge } from './ui/badge';
 import { Progress } from './ui/progress';
-import { Clock, Sun, X, Calendar, GripVertical } from 'lucide-react';
+import { Clock, Sun, X, Calendar, GripVertical, Star } from 'lucide-react';
 import { Button } from './ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { useState } from 'react';
@@ -59,6 +59,10 @@ export function TaskItem({ task, variant = 'default' }: TaskItemProps) {
       dispatch({ type: 'UPDATE_TASK', payload: { ...task, dueDate: date.toISOString() } });
       setIsTimePopoverOpen(false); // Close popover after setting time
     }
+  };
+
+  const toggleImportant = () => {
+    dispatch({ type: 'UPDATE_TASK', payload: { ...task, isImportant: !task.isImportant } });
   };
 
 
@@ -202,14 +206,20 @@ export function TaskItem({ task, variant = 'default' }: TaskItemProps) {
                     ))}
                 </div>
             </div>
-             <Button variant="ghost" size="icon" onClick={toggleMyDay} className="h-8 w-8 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                {task.listId === 'my-day' ? (
-                    <X className="h-4 w-4 text-red-500" />
-                ) : (
-                    <Sun className="h-4 w-4 text-yellow-500" />
-                )}
-                <span className="sr-only">{task.listId === 'my-day' ? 'Remove from My Day' : 'Add to My Day'}</span>
-            </Button>
+            <div className="flex items-center">
+              <Button variant="ghost" size="icon" onClick={toggleImportant} className="h-8 w-8 shrink-0">
+                  <Star className={cn("h-4 w-4", task.isImportant ? "text-yellow-500 fill-yellow-500" : "text-muted-foreground")} />
+                  <span className="sr-only">{task.isImportant ? 'Remove importance' : 'Mark as important'}</span>
+              </Button>
+              <Button variant="ghost" size="icon" onClick={toggleMyDay} className="h-8 w-8 shrink-0">
+                  {task.listId === 'my-day' ? (
+                      <X className="h-4 w-4 text-red-500" />
+                  ) : (
+                      <Sun className="h-4 w-4 text-yellow-500" />
+                  )}
+                  <span className="sr-only">{task.listId === 'my-day' ? 'Remove from My Day' : 'Add to My Day'}</span>
+              </Button>
+            </div>
         </div>
         {task.subtasks && task.subtasks.length > 0 && (
             <div className="pl-8 space-y-2 mt-1">
