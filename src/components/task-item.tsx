@@ -20,6 +20,14 @@ interface TaskItemProps {
   variant?: 'default' | 'my-day';
 }
 
+const TimeBadge = ({ date }: { date: string }) => (
+    <div className="flex flex-col items-center justify-center rounded-md bg-muted px-2 py-1 text-sm font-semibold">
+        <span>{format(parseISO(date), 'HH')}</span>
+        <span className="text-xs">{format(parseISO(date), 'mm')}</span>
+    </div>
+);
+
+
 export function TaskItem({ task, variant = 'default' }: TaskItemProps) {
   const { lists, tags } = useTasks();
   const dispatch = useTasksDispatch();
@@ -117,10 +125,8 @@ export function TaskItem({ task, variant = 'default' }: TaskItemProps) {
   const taskList = getTaskList;
 
   const hasTime = task.dueDate && format(parseISO(task.dueDate), 'HH:mm') !== '00:00';
-
-
-  return (
-    <>
+  
+  const renderCard = () => (
     <div
       className={cn(
         'group relative flex flex-col gap-2 rounded-lg border shadow-sm transition-all hover:shadow-md animate-in fade-in-50 p-3 text-card-foreground',
@@ -269,6 +275,21 @@ export function TaskItem({ task, variant = 'default' }: TaskItemProps) {
             </div>
         )}
     </div>
+  );
+
+
+  return (
+    <>
+    {variant === 'my-day' && hasTime ? (
+        <div className="flex items-start gap-4">
+            <TimeBadge date={task.dueDate!} />
+            <div className="flex-1">
+                {renderCard()}
+            </div>
+        </div>
+    ) : (
+        renderCard()
+    )}
     <EditTaskDialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen} task={task} />
     </>
   );

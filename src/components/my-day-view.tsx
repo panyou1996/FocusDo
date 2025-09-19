@@ -43,7 +43,7 @@ export function MyDayView() {
       <div>
         {tasksWithTime.length > 0 && (
           <div className="space-y-2">
-            <TaskList tasks={tasksWithTime} variant="default" />
+            <TaskList tasks={tasksWithTime} variant="my-day" />
           </div>
         )}
 
@@ -54,7 +54,7 @@ export function MyDayView() {
                 All-day / Unscheduled
             </h3>
             <div className="space-y-2">
-                <TaskList tasks={allDayTasks} variant="default" />
+                <TaskList tasks={allDayTasks} variant="my-day" />
             </div>
           </div>
         )}
