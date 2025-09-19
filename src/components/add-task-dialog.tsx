@@ -181,7 +181,7 @@ export function AddTaskDialog({ open, onOpenChange, defaultListId }: AddTaskDial
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)}>
           <ScrollArea className="max-h-[60vh] p-1 pr-6">
-            <div className="space-y-4 p-1">
+            <div className="space-y-4 p-1 pb-6">
               <div className="space-y-2">
                 <Input id="title" {...register('title')} placeholder="e.g. Finalize presentation" className="text-base" />
                 {errors.title && <p className="text-sm text-destructive">{errors.title.message}</p>}
