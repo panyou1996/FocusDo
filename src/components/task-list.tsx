@@ -15,16 +15,16 @@ interface TaskListProps {
 }
 
 export function TaskList({ items, viewMode = 'detailed', droppableId, isDropDisabled = false }: TaskListProps) {
-  if (!items) {
-    return null;
-  }
-
-  if (items.length === 0 && droppableId !== 'completed-tasks') {
-      return (
-         <div className="text-center py-10 border-2 border-dashed rounded-lg">
-            <p className="text-muted-foreground">No tasks here. Looks like a clean slate!</p>
-        </div>
-      )
+  if (!items || items.length === 0) {
+    if (droppableId === 'completed-tasks' || droppableId === 'timed-items' || droppableId === 'allday-tasks') {
+        // Don't show a message for these specific droppableIds when empty, MyDayView handles it.
+        return null;
+    }
+    return (
+        <div className="text-center py-10 border-2 border-dashed rounded-lg">
+        <p className="text-muted-foreground">No tasks here. Looks like a clean slate!</p>
+    </div>
+    );
   }
 
   return (

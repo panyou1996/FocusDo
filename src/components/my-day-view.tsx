@@ -40,7 +40,7 @@ export function MyDayView() {
         const aHasTime = !!a.startTime;
         const bHasTime = !!b.startTime;
 
-        // 2. Sort by time
+        // 2. Sort by time (Highest Priority for non-completed items)
         if (aHasTime && bHasTime) {
             const aTime = parseISO(a.startTime!).getTime();
             const bTime = parseISO(b.startTime!).getTime();
@@ -49,7 +49,7 @@ export function MyDayView() {
             }
         }
         
-        // 3. Items with time come before items without time
+        // 3. Timed items come before non-timed items
         if (aHasTime && !bHasTime) return -1;
         if (!aHasTime && bHasTime) return 1;
 
@@ -87,6 +87,8 @@ export function MyDayView() {
   const allDayTasks = myDayItems.filter((item): item is Task & {type: 'task'} => item.type === 'task' && !item.startTime && !item.completed);
   const completedTasks = myDayItems.filter((item): item is Task & {type: 'task'} => item.type === 'task' && item.completed);
   
+  const hasContent = scheduledItems.length > 0 || allDayTasks.length > 0 || completedTasks.length > 0;
+
   return (
     <DndProvider>
         <DragDropContext onDragEnd={onDragEnd}>
@@ -103,7 +105,7 @@ export function MyDayView() {
                 </div>
             )}
 
-            {(allDayTasks.length > 0 || (myDayItems.length > 0 && scheduledItems.length === 0)) && (
+            {allDayTasks.length > 0 && (
                 <div className="mt-8">
                 <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
                     <Calendar className="h-5 w-5" />
@@ -115,7 +117,7 @@ export function MyDayView() {
                 </div>
             )}
 
-            {myDayItems.length === 0 && (
+            {!hasContent && (
                 <div className="text-center py-10 border-2 border-dashed rounded-lg">
                     <p className="text-muted-foreground">Your day is clear.</p>
                     <p className="text-muted-foreground text-sm">Add tasks from your lists to get started.</p>
