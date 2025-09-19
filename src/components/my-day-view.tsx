@@ -33,20 +33,27 @@ export function MyDayView() {
         const aIsCompleted = a.type === 'task' && a.completed;
         const bIsCompleted = b.type === 'task' && b.completed;
 
+        // 1. Completed tasks go to the bottom
         if (aIsCompleted && !bIsCompleted) return 1;
         if (!aIsCompleted && bIsCompleted) return -1;
-        
-        const aTime = a.startTime ? parseISO(a.startTime) : new Date(8640000000000000); // Far future for items without time
-        const bTime = b.startTime ? parseISO(b.startTime) : new Date(8640000000000000);
-        
-        if (aTime.getTime() !== bTime.getTime()) {
-            return aTime.getTime() - bTime.getTime();
+
+        const aHasTime = !!a.startTime;
+        const bHasTime = !!b.startTime;
+
+        // 2. Sort by time
+        if (aHasTime && bHasTime) {
+            const aTime = parseISO(a.startTime!).getTime();
+            const bTime = parseISO(b.startTime!).getTime();
+            if (aTime !== bTime) {
+                return aTime - bTime;
+            }
         }
+        
+        // 3. Items with time come before items without time
+        if (aHasTime && !bHasTime) return -1;
+        if (!aHasTime && bHasTime) return 1;
 
-        // If times are same, events come before tasks
-        if (a.type === 'event' && b.type === 'task') return -1;
-        if (a.type === 'task' && b.type === 'event') return 1;
-
+        // 4. For items without time, sort by importance, then creation date
         if (a.type === 'task' && b.type === 'task') {
             if (a.isImportant && !b.isImportant) return -1;
             if (!a.isImportant && b.isImportant) return 1;
