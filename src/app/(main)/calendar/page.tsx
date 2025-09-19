@@ -1,71 +1,122 @@
 'use client';
 
-import { TaskItem } from '@/components/task-item';
-import { Calendar } from '@/components/ui/calendar';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { TaskList } from '@/components/task-list';
 import { useTasks } from '@/hooks/use-tasks';
-import { areIntervalsOverlapping, format, isSameDay, parseISO } from 'date-fns';
-import { useState } from 'react';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
+import {
+  eachWeekOfInterval,
+  endOfWeek,
+  format,
+  isSameDay,
+  isSameWeek,
+  isToday,
+  isTomorrow,
+  parseISO,
+  startOfWeek,
+} from 'date-fns';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function CalendarPage() {
   const { tasks } = useTasks();
-  const [date, setDate] = useState<Date | undefined>(new Date());
 
-  const tasksWithDueDate = tasks.filter((task) => !!task.dueDate);
+  const tasksWithDueDate = tasks
+    .filter((task) => !!task.dueDate)
+    .sort((a, b) => parseISO(a.dueDate!).getTime() - parseISO(b.dueDate!).getTime());
 
-  const tasksForSelectedDay = date
-    ? tasksWithDueDate.filter((task) => isSameDay(parseISO(task.dueDate!), date))
-    : [];
+  if (tasksWithDueDate.length === 0) {
+    return (
+      <div className="text-center py-10 border-2 border-dashed rounded-lg">
+        <p className="text-muted-foreground">No tasks with due dates yet.</p>
+        <p className="text-sm text-muted-foreground">
+          Add due dates to your tasks to see them here.
+        </p>
+      </div>
+    );
+  }
+
+  const firstTaskDate = parseISO(tasksWithDueDate[0].dueDate!);
+  const lastTaskDate = parseISO(
+    tasksWithDueDate[tasksWithDueDate.length - 1].dueDate!
+  );
+
+  const weeks = eachWeekOfInterval(
+    {
+      start: firstTaskDate,
+      end: lastTaskDate,
+    },
+    { weekStartsOn: 1 }
+  );
+
+  const tasksByWeek = weeks.map((weekStart) => {
+    const weekEnd = endOfWeek(weekStart, { weekStartsOn: 1 });
+    const weekTasks = tasksWithDueDate.filter((task) =>
+      isSameWeek(parseISO(task.dueDate!), weekStart, { weekStartsOn: 1 })
+    );
+
+    const tasksByDay = weekTasks.reduce<Record<string, { label: string; tasks: typeof weekTasks }>>(
+      (acc, task) => {
+        const dueDate = parseISO(task.dueDate!);
+        const dayKey = format(dueDate, 'yyyy-MM-dd');
+
+        if (!acc[dayKey]) {
+          let label = format(dueDate, 'MMMM d, yyyy');
+          if (isToday(dueDate)) label = 'Today';
+          if (isTomorrow(dueDate)) label = 'Tomorrow';
+          acc[dayKey] = { label, tasks: [] };
+        }
+        acc[dayKey].tasks.push(task);
+        return acc;
+      },
+      {}
+    );
+
+    return {
+      weekStart,
+      weekEnd,
+      weekTasks,
+      tasksByDay,
+    };
+  });
+  
+  const today = new Date();
+  const currentWeekValue = `week-${format(today, 'yyyy-ww')}`;
 
   return (
-    <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-      <div className="lg:col-span-2">
-        <Card>
-            <CardContent className="p-2">
-                <Calendar
-                    mode="single"
-                    selected={date}
-                    onSelect={setDate}
-                    className="w-full"
-                    modifiers={{
-                        hasTask: tasksWithDueDate.map((task) => parseISO(task.dueDate!)),
-                    }}
-                    modifiersStyles={{
-                        hasTask: {
-                            position: 'relative',
-                        },
-                    }}
-                    components={{
-                        DayContent: (props) => {
-                            const hasTask = tasksWithDueDate.some((task) => isSameDay(parseISO(task.dueDate!), props.date));
-                            return (
-                                <div className="relative">
-                                    {props.date.getDate()}
-                                    {hasTask && (
-                                    <span className="absolute bottom-0 left-1/2 h-1 w-1 -translate-x-1/2 transform rounded-full bg-primary" />
-                                    )}
-                                </div>
-                            );
-                        },
-                    }}
-                />
-            </CardContent>
-        </Card>
-      </div>
-      <div className="lg:col-span-1">
-        <h2 className="mb-4 text-xl font-bold">
-          {date ? format(date, 'MMMM d, yyyy') : 'Select a day'}
-        </h2>
-        <div className="space-y-4">
-          {tasksForSelectedDay.length > 0 ? (
-            tasksForSelectedDay.map((task) => <TaskItem key={task.id} task={task} />)
-          ) : (
-            <div className="text-center py-10 border-2 border-dashed rounded-lg">
-                <p className="text-muted-foreground">No tasks scheduled for this day.</p>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
+    <Card>
+      <CardHeader>
+        <CardTitle>Calendar</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <Accordion type="single" collapsible defaultValue={currentWeekValue} className="w-full">
+          {tasksByWeek.map(({ weekStart, weekEnd, tasksByDay }, index) => (
+            <AccordionItem value={`week-${format(weekStart, 'yyyy-ww')}`} key={index}>
+              <AccordionTrigger>
+                <div className="flex w-full justify-between items-center pr-4">
+                    <span className="font-semibold">
+                    {format(weekStart, 'MMM d')} - {format(weekEnd, 'MMM d, yyyy')}
+                    </span>
+                    <span className="text-sm text-muted-foreground">
+                        {Object.values(tasksByDay).reduce((sum, day) => sum + day.tasks.length, 0)} tasks
+                    </span>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="space-y-6 pl-2">
+                {Object.entries(tasksByDay).map(([day, {label, tasks}]) => (
+                    <div key={day}>
+                        <h3 className="text-md font-semibold mb-2">{label}</h3>
+                        <TaskList tasks={tasks} />
+                    </div>
+                ))}
+              </AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
+      </CardContent>
+    </Card>
   );
 }
