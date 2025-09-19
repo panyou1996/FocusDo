@@ -35,19 +35,13 @@ export function TaskItem({ task, variant = 'default' }: TaskItemProps) {
   };
 
   const toggleMyDay = () => {
-    if (task.listId === 'my-day') {
-      // Remove from My Day, move to 'tasks' list
-      dispatch({ type: 'UPDATE_TASK', payload: { ...task, listId: 'tasks' } });
-    } else {
-      // Add to My Day
-      const updatedTask = { ...task, listId: 'my-day' };
-      if (!updatedTask.dueDate) {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0); // Set to start of day for an "all-day" task
-        updatedTask.dueDate = today.toISOString();
-      }
-      dispatch({ type: 'UPDATE_TASK', payload: updatedTask });
+    const updatedTask = { ...task, isMyDay: !task.isMyDay };
+    if (updatedTask.isMyDay && !updatedTask.dueDate) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      updatedTask.dueDate = today.toISOString();
     }
+    dispatch({ type: 'UPDATE_TASK', payload: updatedTask });
   };
 
   const handleTimeChange = () => {
@@ -218,12 +212,12 @@ export function TaskItem({ task, variant = 'default' }: TaskItemProps) {
                   <span className="sr-only">{task.isImportant ? 'Remove importance' : 'Mark as important'}</span>
               </Button>
               <Button variant="ghost" size="icon" onClick={toggleMyDay} className="h-8 w-8 shrink-0">
-                  {task.listId === 'my-day' ? (
+                  {task.isMyDay ? (
                       <X className="h-4 w-4 text-red-500" />
                   ) : (
                       <Sun className="h-4 w-4 text-yellow-500" />
                   )}
-                  <span className="sr-only">{task.listId === 'my-day' ? 'Remove from My Day' : 'Add to My Day'}</span>
+                  <span className="sr-only">{task.isMyDay ? 'Remove from My Day' : 'Add to My Day'}</span>
               </Button>
             </div>
         </div>

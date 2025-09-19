@@ -21,7 +21,7 @@ export function MyDayView() {
     const fetchRecommendations = async () => {
       setIsLoading(true);
       try {
-        const availableTasks = tasks.filter((t) => !t.completed && t.listId !== 'my-day');
+        const availableTasks = tasks.filter((t) => !t.completed && !t.isMyDay);
         const input = {
           userHabits: 'Prefers to work on deep work in the morning and smaller tasks in the afternoon.',
           taskPriorities: 'Urgent tasks and work related to "Project Aqua" are high priority.',
@@ -45,7 +45,7 @@ export function MyDayView() {
 
   const myDayTasks = useMemo(() => {
     return tasks
-      .filter((task) => task.listId === 'my-day' && task.dueDate && isToday(parseISO(task.dueDate)))
+      .filter((task) => task.isMyDay && task.dueDate && isToday(parseISO(task.dueDate)))
       .sort((a, b) => {
         if (a.completed && !b.completed) return 1;
         if (!a.completed && b.completed) return -1;
@@ -57,8 +57,8 @@ export function MyDayView() {
         if (aHasTime) return -1;
         if (bHasTime) return 1;
         
-        const aIsUrgent = a.tagIds.includes('urgent');
-        const bIsUrgent = b.tagIds.includes('urgent');
+        const aIsUrgent = a.isImportant;
+        const bIsUrgent = b.isImportant;
         if (aIsUrgent && !bIsUrgent) return -1;
         if (!aIsUrgent && bIsUrgent) return 1;
 
@@ -67,7 +67,7 @@ export function MyDayView() {
   }, [tasks]);
 
   const handleAddTaskToMyDay = (task: Task) => {
-    const updatedTask = { ...task, listId: 'my-day' };
+    const updatedTask = { ...task, isMyDay: true };
      if (!updatedTask.dueDate) {
         const today = new Date();
         today.setHours(0, 0, 0, 0); // Set to start of day for an "all-day" task
@@ -78,7 +78,9 @@ export function MyDayView() {
   };
 
   const tasksWithTime = myDayTasks.filter(t => t.dueDate && format(parseISO(t.dueDate), 'HH:mm') !== '00:00');
-  const allDayTasks = myDayTasks.filter(t => !t.dueDate || format(parseISO(t.dueDate), 'HH:mm') === '00:00');
+  const allDayTasks = useMemo(() => {
+    return tasks.filter(task => task.isMyDay && (!task.dueDate || format(parseISO(task.dueDate), 'HH:mm') === '00:00'))
+  }, [tasks]);
   
   return (
     <div className="space-y-8">
@@ -99,7 +101,7 @@ export function MyDayView() {
           </div>
         )}
 
-        {myDayTasks.length === 0 && (
+        {myDayTasks.length === 0 && allDayTasks.length === 0 && (
              <div className="text-center py-10 border-2 border-dashed rounded-lg">
                 <p className="text-muted-foreground">Your day is clear.</p>
                 <p className="text-muted-foreground text-sm">Add tasks from the suggestions below or create a new one.</p>

@@ -95,7 +95,6 @@ export function AddTaskDialog({ open, onOpenChange, defaultListId }: AddTaskDial
   });
 
   const selectedTags = watch('tagIds') || [];
-  const isMyDay = watch('isMyDay');
 
   const onSubmit = (data: TaskFormValues) => {
     let dueDate: string | undefined = undefined;
@@ -110,7 +109,6 @@ export function AddTaskDialog({ open, onOpenChange, defaultListId }: AddTaskDial
             const [hours, minutes] = data.time.split(':');
             date.setHours(parseInt(hours, 10), parseInt(minutes, 10));
         } else {
-            // Set to beginning of the day if no time is specified
             date.setHours(0, 0, 0, 0);
         }
         dueDate = date.toISOString();
@@ -121,8 +119,9 @@ export function AddTaskDialog({ open, onOpenChange, defaultListId }: AddTaskDial
       title: data.title,
       description: data.description,
       completed: false,
+      isMyDay: data.isMyDay,
       isImportant: data.isImportant,
-      listId: data.isMyDay ? 'my-day' : data.listId,
+      listId: data.listId,
       dueDate: dueDate,
       duration: data.duration,
       tagIds: data.tagIds || [],
@@ -149,8 +148,8 @@ export function AddTaskDialog({ open, onOpenChange, defaultListId }: AddTaskDial
         duration: undefined,
         tagIds: [],
         subtasks: [],
-        isMyDay: false,
-        isImportant: false,
+        isMyDay: defaultListId === 'my-day',
+        isImportant: defaultListId === 'important',
        });
     }
   }, [open, defaultListId, reset]);
@@ -174,8 +173,7 @@ export function AddTaskDialog({ open, onOpenChange, defaultListId }: AddTaskDial
     }
   };
 
-
-  const regularLists = lists.filter(l => !['my-day', 'important', 'tasks'].includes(l.id));
+  const regularLists = lists.filter(l => !['my-day', 'important'].includes(l.id));
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -236,7 +234,6 @@ export function AddTaskDialog({ open, onOpenChange, defaultListId }: AddTaskDial
                         'w-full justify-start text-left font-normal',
                         !field.value && 'text-muted-foreground'
                       )}
-                      disabled={isMyDay && !field.value}
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
                       {field.value ? format(field.value, 'MMM d, yyyy') : <span>Due date</span>}
@@ -261,7 +258,6 @@ export function AddTaskDialog({ open, onOpenChange, defaultListId }: AddTaskDial
                         type="time"
                         className="h-9"
                         {...field}
-                         disabled={isMyDay && !watch('dueDate')}
                     />
                 )}
             />
@@ -288,7 +284,7 @@ export function AddTaskDialog({ open, onOpenChange, defaultListId }: AddTaskDial
               name="listId"
               control={control}
               render={({ field }) => (
-                <Select onValueChange={field.onChange} value={field.value} disabled={isMyDay}>
+                <Select onValueChange={field.onChange} value={field.value}>
                   <SelectTrigger className="w-full h-9 px-3">
                      <div className="flex items-center gap-2">
                         <List className="h-4 w-4" />

@@ -56,7 +56,7 @@ export function MainSidebar() {
            <SidebarMenuItem>
             <SidebarMenuButton asChild isActive={pathname.startsWith('/lists/tasks')} tooltip="Tasks">
               <Link href="/lists/tasks">
-                <Lucide.CheckSquare />
+                <Lucide.Home />
                 <span>Tasks</span>
               </Link>
             </SidebarMenuButton>
