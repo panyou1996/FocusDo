@@ -12,25 +12,42 @@ import {
   SidebarGroupLabel,
   SidebarFooter,
   SidebarGroupAction,
+  SidebarMenuAction,
 } from '@/components/ui/sidebar';
 import { Icons } from '@/components/icons';
-import { useTasks } from '@/hooks/use-tasks';
+import { useTasks, useTasksDispatch } from '@/hooks/use-tasks';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import * as Lucide from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Separator } from './ui/separator';
 import { Button } from './ui/button';
-import { Plus } from 'lucide-react';
-import { useState } from 'react';
+import { MoreHorizontal, Plus, Trash2, Edit } from 'lucide-react';
+import React, { useState } from 'react';
 import { AddListDialog } from './add-list-dialog';
 import { getSidebarListColorClasses } from '@/lib/utils';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
+import { EditListDialog } from './edit-list-dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from './ui/alert-dialog';
+import type { List } from '@/lib/types';
 
 
 export function MainSidebar() {
   const { lists, tags } = useTasks();
+  const dispatch = useTasksDispatch();
   const pathname = usePathname();
   const [isAddListDialogOpen, setIsAddListDialogOpen] = useState(false);
+  const [isEditListDialogOpen, setIsEditListDialogOpen] = useState(false);
+  const [listToEdit, setListToEdit] = useState<List | null>(null);
+
+  const handleEditClick = (list: List) => {
+    setListToEdit(list);
+    setIsEditListDialogOpen(true);
+  };
+
+  const handleDeleteClick = (listId: string) => {
+    dispatch({ type: 'DELETE_LIST', payload: listId });
+  };
 
   return (
     <>
@@ -109,6 +126,41 @@ export function MainSidebar() {
                         <span>{list.title}</span>
                       </Link>
                     </SidebarMenuButton>
+                     <SidebarMenuAction showOnHover>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button>
+                            <MoreHorizontal />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                          <DropdownMenuItem onClick={() => handleEditClick(list)}>
+                            <Edit className="mr-2" />
+                            Edit
+                          </DropdownMenuItem>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                                <Trash2 className="mr-2 text-destructive" />
+                                <span className="text-destructive">Delete</span>
+                              </DropdownMenuItem>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  This will permanently delete the &quot;{list.title}&quot; list and all its tasks. This action cannot be undone.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => handleDeleteClick(list.id)}>Delete</AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </SidebarMenuAction>
                   </SidebarMenuItem>
                 );
               })}
@@ -141,6 +193,7 @@ export function MainSidebar() {
         </SidebarFooter>
       </Sidebar>
       <AddListDialog open={isAddListDialogOpen} onOpenChange={setIsAddListDialogOpen} />
+      {listToEdit && <EditListDialog open={isEditListDialogOpen} onOpenChange={setIsEditListDialogOpen} list={listToEdit} />}
     </>
   );
 }

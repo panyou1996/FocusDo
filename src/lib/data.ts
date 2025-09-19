@@ -4,9 +4,9 @@ import { addDays, subDays } from 'date-fns';
 const today = new Date();
 
 export const initialLists: List[] = [
-  { id: 'my-day', title: 'My Day', icon: 'Sun' },
-  { id: 'important', title: 'Important', icon: 'Star' },
-  { id: 'tasks', title: 'Tasks', icon: 'Home' },
+  { id: 'my-day', title: 'My Day', icon: 'Sun', color: 'gray' },
+  { id: 'important', title: 'Important', icon: 'Star', color: 'red' },
+  { id: 'tasks', title: 'Tasks', icon: 'Home', color: 'gray' },
   { id: 'work', title: 'Work', icon: 'Briefcase', color: 'blue' },
   { id: 'personal', title: 'Personal', icon: 'User', color: 'green' },
   { id: 'groceries', title: 'Grocery Shopping', icon: 'ShoppingCart', color: 'orange' },

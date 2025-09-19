@@ -16,6 +16,8 @@ type Action =
   | { type: 'DELETE_TASK'; payload: string }
   | { type: 'ADD_TAG'; payload: Tag }
   | { type: 'ADD_LIST'; payload: List }
+  | { type: 'UPDATE_LIST'; payload: List }
+  | { type: 'DELETE_LIST'; payload: string }
   | { type: 'SET_STATE'; payload: AppState };
 
 const AppStateContext = createContext<AppState | undefined>(undefined);
@@ -48,6 +50,17 @@ const appReducer = (state: AppState, action: Action): AppState => {
             return state;
         }
         return { ...state, lists: [...state.lists, action.payload] };
+    case 'UPDATE_LIST':
+        return {
+            ...state,
+            lists: state.lists.map(list => list.id === action.payload.id ? action.payload : list)
+        };
+    case 'DELETE_LIST':
+        return {
+            ...state,
+            lists: state.lists.filter(list => list.id !== action.payload),
+            tasks: state.tasks.filter(task => task.listId !== action.payload)
+        };
     case 'SET_STATE':
         return action.payload;
     default:
