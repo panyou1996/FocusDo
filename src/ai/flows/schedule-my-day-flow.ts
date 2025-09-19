@@ -52,13 +52,14 @@ You will be given a list of tasks, their estimated durations, and their importan
 Your goal is to assign a specific start time to each task for the current date: {{{currentDate}}}.
 
 Follow these rules strictly:
-1.  Schedule tasks within the user's available time slots as defined in their schedule.
+1.  Schedule tasks ONLY within the user's available time slots as defined in their schedule.
 2.  Prioritize 'isImportant: true' tasks. Try to schedule them earlier in the day if possible.
 3.  Respect the duration of each task. Ensure there is enough time in the schedule for it.
-4.  After each task, schedule a 15-minute break before the next task begins.
-5.  If a task has no duration, treat it as a 15-minute task.
-6.  The output for 'scheduledTime' for each task MUST be a complete ISO 8601 string, including the date and the new time you have assigned. For example: '2024-08-15T09:30:00.000Z'.
-7.  Do not schedule tasks during break times or outside the specified working hours.
+4.  The end time of a task (start time + duration) CANNOT extend into a break or non-work period.
+5.  After each task, schedule a 15-minute break before the next task begins.
+6.  If a task has no duration, you MUST treat it as a 15-minute task for scheduling purposes.
+7.  The output for 'scheduledTime' for each task MUST be a complete ISO 8601 string, including the date and the new time you have assigned. For example: '2024-08-15T09:30:00.000Z'.
+8.  Do not schedule tasks during specified break times (e.g., lunch, dinner) or outside the user's specified free/working hours.
 
 User's Schedule:
 {{{userSchedule}}}
