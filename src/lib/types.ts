@@ -3,14 +3,6 @@ import type { LucideIcon } from "lucide-react";
 export type Tag = {
   id: string;
   label: string;
-  color:
-    | "red"
-    | "orange"
-    | "yellow"
-    | "green"
-    | "blue"
-    | "purple"
-    | "gray";
 };
 
 export type Subtask = {
@@ -37,4 +29,14 @@ export type List = {
   id: string;
   title: string;
   icon: React.ComponentProps<typeof LucideIcon>["name"];
+  color?:
+    | "red"
+    | "orange"
+    | "yellow"
+    | "green"
+    | "blue"
+    | "purple"
+    | "gray"
+    | "pink"
+    | "brown";
 };

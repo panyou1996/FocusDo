@@ -7,17 +7,17 @@ export const initialLists: List[] = [
   { id: 'my-day', title: 'My Day', icon: 'Sun' },
   { id: 'important', title: 'Important', icon: 'Star' },
   { id: 'tasks', title: 'Tasks', icon: 'CheckSquare' },
-  { id: 'work', title: 'Work', icon: 'Briefcase' },
-  { id: 'personal', title: 'Personal', icon: 'User' },
-  { id: 'groceries', title: 'Grocery Shopping', icon: 'ShoppingCart' },
+  { id: 'work', title: 'Work', icon: 'Briefcase', color: 'blue' },
+  { id: 'personal', title: 'Personal', icon: 'User', color: 'green' },
+  { id: 'groceries', title: 'Grocery Shopping', icon: 'ShoppingCart', color: 'orange' },
 ];
 
 export const initialTags: Tag[] = [
-  { id: 'urgent', label: 'Urgent', color: 'red' },
-  { id: 'home', label: 'Home', color: 'blue' },
-  { id: 'work', label: 'Work', color: 'purple' },
-  { id: 'project-aqua', label: 'Project Aqua', color: 'green' },
-  { id: 'quick-task', label: 'Quick Task', color: 'yellow' },
+  { id: 'urgent', label: 'Urgent' },
+  { id: 'home', label: 'Home' },
+  { id: 'work', label: 'Work' },
+  { id: 'project-aqua', label: 'Project Aqua' },
+  { id: 'quick-task', label: 'Quick Task' },
 ];
 
 export const initialTasks: Task[] = [

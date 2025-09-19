@@ -2,7 +2,7 @@
 import type { Task } from '@/lib/types';
 import { useTasks, useTasksDispatch } from '@/hooks/use-tasks';
 import { Checkbox } from './ui/checkbox';
-import { cn, getTagColorClasses } from '@/lib/utils';
+import { cn, getListColorClasses } from '@/lib/utils';
 import { format, isToday, isTomorrow, parseISO } from 'date-fns';
 import { Badge } from './ui/badge';
 import { Progress } from './ui/progress';
@@ -18,7 +18,7 @@ interface TaskItemProps {
 }
 
 export function TaskItem({ task, variant = 'default' }: TaskItemProps) {
-  const { tags } = useTasks();
+  const { lists, tags } = useTasks();
   const dispatch = useTasksDispatch();
   const [newTime, setNewTime] = useState(task.dueDate ? format(parseISO(task.dueDate), 'HH:mm') : '');
   const [isTimePopoverOpen, setIsTimePopoverOpen] = useState(false);
@@ -69,6 +69,10 @@ export function TaskItem({ task, variant = 'default' }: TaskItemProps) {
   const getTaskTags = () => {
     return tags.filter(tag => task.tagIds.includes(tag.id));
   };
+  
+  const getTaskList = () => {
+    return lists.find(list => list.id === task.listId);
+  }
 
   const getDueDateLabel = () => {
     if (!task.dueDate) return null;
@@ -83,6 +87,7 @@ export function TaskItem({ task, variant = 'default' }: TaskItemProps) {
   const totalSubtasks = task.subtasks?.length || 0;
   const subtaskProgress = totalSubtasks > 0 ? (completedSubtasks / totalSubtasks) * 100 : 0;
   const taskTags = getTaskTags();
+  const taskList = getTaskList();
 
   const hasTime = task.dueDate && format(parseISO(task.dueDate), 'HH:mm') !== '00:00';
 
@@ -130,7 +135,7 @@ export function TaskItem({ task, variant = 'default' }: TaskItemProps) {
                         </span>
                     )}
                     {taskTags.map(tag => (
-                      <Badge key={tag.id} variant="outline" className={cn("text-xs font-normal border", getTagColorClasses(tag.color))}>
+                      <Badge key={tag.id} variant="outline" className="text-xs font-normal border">
                         #{tag.label}
                       </Badge>
                     ))}
@@ -158,8 +163,9 @@ export function TaskItem({ task, variant = 'default' }: TaskItemProps) {
   return (
     <div
       className={cn(
-        'group relative flex flex-col gap-2 rounded-lg border bg-card p-3 text-card-foreground shadow-sm transition-all hover:shadow-md animate-in fade-in-50',
-        task.completed && 'bg-card/60 opacity-70'
+        'group relative flex flex-col gap-2 rounded-lg border shadow-sm transition-all hover:shadow-md animate-in fade-in-50 p-3 text-card-foreground',
+        getListColorClasses(taskList?.color),
+        task.completed && 'opacity-70'
       )}
     >
         <div className="flex items-start gap-3">
@@ -167,7 +173,7 @@ export function TaskItem({ task, variant = 'default' }: TaskItemProps) {
                 id={`task-${task.id}`}
                 checked={task.completed}
                 onCheckedChange={handleCheckedChange}
-                className="h-5 w-5 rounded-full mt-0.5"
+                className="h-5 w-5 rounded-full mt-0.5 border-primary"
                 aria-label={`Mark task "${task.title}" as ${task.completed ? 'incomplete' : 'complete'}`}
             />
             <div className="flex-1">
@@ -200,7 +206,7 @@ export function TaskItem({ task, variant = 'default' }: TaskItemProps) {
                         </span>
                     )}
                      {taskTags.map((tag) => (
-                        <Badge key={tag.id} variant="outline" className={cn("text-xs font-normal border", getTagColorClasses(tag.color))}>
+                        <Badge key={tag.id} variant="outline" className="text-xs font-normal">
                             #{tag.label}
                         </Badge>
                     ))}

@@ -27,7 +27,7 @@ import { Calendar as CalendarIcon, List, Plus, Tag, Trash2, X, Clock, CheckSquar
 import { Calendar } from './ui/calendar';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
-import { cn, getTagColorClasses } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 import React, { useState } from 'react';
 import { Checkbox } from './ui/checkbox';
 import { ScrollArea } from './ui/scroll-area';
@@ -61,8 +61,6 @@ interface AddTaskDialogProps {
   defaultListId?: string;
 }
 
-const availableTagColors: TagType['color'][] = ["red", "orange", "yellow", "green", "blue", "purple", "gray"];
-
 export function AddTaskDialog({ open, onOpenChange, defaultListId }: AddTaskDialogProps) {
   const { lists, tags } = useTasks();
   const dispatch = useTasksDispatch();
@@ -70,7 +68,6 @@ export function AddTaskDialog({ open, onOpenChange, defaultListId }: AddTaskDial
   const [newSubtask, setNewSubtask] = useState('');
   const [isAddTagPopoverOpen, setIsAddTagPopoverOpen] = useState(false);
   const [newTagName, setNewTagName] = useState('');
-  const [newTagColor, setNewTagColor] = useState<TagType['color']>('gray');
 
   const form = useForm<TaskFormValues>({
     resolver: zodResolver(taskSchema),
@@ -170,11 +167,9 @@ export function AddTaskDialog({ open, onOpenChange, defaultListId }: AddTaskDial
       const newTag: TagType = {
         id: newTagName.trim().toLowerCase().replace(/\s+/g, '-'),
         label: newTagName.trim(),
-        color: newTagColor,
       };
       dispatch({ type: 'ADD_TAG', payload: newTag });
       setNewTagName('');
-      setNewTagColor('gray');
       setIsAddTagPopoverOpen(false);
     }
   };
@@ -338,7 +333,7 @@ export function AddTaskDialog({ open, onOpenChange, defaultListId }: AddTaskDial
                             className={cn(
                                 "flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium border transition-colors",
                                 selectedTags.includes(tag.id)
-                                ? cn(getTagColorClasses(tag.color), 'border-transparent')
+                                ? 'bg-muted border-transparent'
                                 : 'bg-transparent text-muted-foreground hover:bg-muted border-dashed'
                             )}
                         >
@@ -361,21 +356,6 @@ export function AddTaskDialog({ open, onOpenChange, defaultListId }: AddTaskDial
                                     value={newTagName} 
                                     onChange={(e) => setNewTagName(e.target.value)}
                                 />
-                                <div className="flex items-center gap-2">
-                                     <Palette className="h-4 w-4 text-muted-foreground" />
-                                     <div className="flex flex-wrap gap-1">
-                                        {availableTagColors.map(color => (
-                                            <button
-                                                type="button"
-                                                key={color}
-                                                onClick={() => setNewTagColor(color)}
-                                                className={cn("h-6 w-6 rounded-full border-2", getTagColorClasses(color),
-                                                newTagColor === color ? 'border-primary' : 'border-transparent'
-                                                )}
-                                            />
-                                        ))}
-                                    </div>
-                                </div>
                                 <Button onClick={handleAddNewTag} className="w-full">Create</Button>
                             </div>
                         </PopoverContent>
