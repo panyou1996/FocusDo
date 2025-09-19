@@ -49,18 +49,19 @@ const prompt = ai.definePrompt({
 
 You will be given a list of tasks, their estimated durations, their importance, and their deadlines (dueDate).
 
-Your goal is to assign a specific start time (startTime) to each task for the current date: {{{currentDate}}}.
+Your goal is to assign a specific start time (startTime) to each and every task for the current date: {{{currentDate}}}.
 
 Follow these rules strictly:
-1.  Schedule tasks ONLY within the user's available time slots as defined in their schedule.
-2.  Prioritize 'isImportant: true' tasks. Try to schedule them earlier in the day if possible.
-3.  Respect the 'dueDate' as a hard deadline. The task MUST be scheduled to finish before its dueDate.
-4.  Respect the duration of each task. Ensure there is enough time in the schedule for it.
-5.  The end time of a task (startTime + duration) CANNOT extend into a break, non-work period, or past the task's dueDate.
-6.  After each task, schedule a 15-minute break before the next task begins. This break must also be within available time.
-7.  If a task has no duration, you MUST treat it as a 15-minute task for scheduling purposes.
-8.  The output for 'startTime' for each task MUST be a complete ISO 8601 string, including the date and the new time you have assigned. For example: '2024-08-15T09:30:00.000Z'.
-9.  Do not schedule tasks during specified break times (e.g., lunch, dinner) or outside the user's specified free/working hours.
+1.  You MUST schedule ALL tasks provided. Do not leave any task unscheduled.
+2.  Schedule tasks ONLY within the user's available time slots as defined in their schedule.
+3.  Prioritize 'isImportant: true' tasks. Try to schedule them earlier in the day if possible.
+4.  Respect the 'dueDate' as a hard deadline. The task MUST be scheduled to finish before its dueDate.
+5.  Respect the duration of each task. Ensure there is enough time in the schedule for it.
+6.  The end time of a task (startTime + duration) CANNOT extend into a break, non-work period, or past the task's dueDate. This is a hard constraint.
+7.  After each task, schedule a 15-minute break before the next task begins. This break must also be within available time.
+8.  If a task has no duration, you MUST treat it as a 15-minute task for scheduling purposes.
+9.  The output for 'startTime' for each task MUST be a complete ISO 8601 string, including the date and the new time you have assigned. For example: '2024-08-15T09:30:00.000Z'.
+10. Do not schedule tasks during specified break times (e.g., lunch, dinner) or outside the user's specified free/working hours.
 
 User's Schedule:
 {{{userSchedule}}}
@@ -72,7 +73,7 @@ Tasks to schedule:
 - Task ID: {{id}}, Title: "{{title}}", Duration: {{duration}} mins, Important: {{isImportant}}, Due Date: {{dueDate}}
 {{/each}}
 
-Please provide the optimized schedule.`,
+Please provide the optimized schedule. All tasks must be assigned a start time.`,
 });
 
 const scheduleMyDayTasksFlow = ai.defineFlow(
