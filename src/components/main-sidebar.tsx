@@ -25,11 +25,12 @@ import { Button } from './ui/button';
 import { MoreHorizontal, Plus, Trash2, Edit, Clock } from 'lucide-react';
 import React, { useState } from 'react';
 import { AddListDialog } from './add-list-dialog';
-import { getSidebarListColorClasses } from '@/lib/utils';
+import { getSidebarListColorClasses, listColorMap } from '@/lib/utils';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
 import { EditListDialog } from './edit-list-dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from './ui/alert-dialog';
 import type { List } from '@/lib/types';
+import { cn } from '@/lib/utils';
 
 
 export function MainSidebar() {
@@ -130,6 +131,7 @@ export function MainSidebar() {
                       className={getSidebarListColorClasses(list.color, isActive)}
                     >
                       <Link href={`/lists/${list.id}`}>
+                        <div className={cn("h-2.5 w-2.5 rounded-full", listColorMap[list.color || 'gray'])} />
                         <Icon />
                         <span>{list.title}</span>
                       </Link>

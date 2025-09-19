@@ -6,6 +6,18 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+export const listColorMap: Record<NonNullable<List['color']>, string> = {
+  red: "bg-red-500",
+  orange: "bg-orange-500",
+  yellow: "bg-yellow-500",
+  green: "bg-green-500",
+  blue: "bg-blue-500",
+  purple: "bg-purple-500",
+  gray: "bg-gray-500",
+  pink: "bg-pink-500",
+  brown: "bg-stone-500",
+};
+
 const taskListColorMap: Record<NonNullable<List['color']>, string> = {
   red: "bg-red-100 dark:bg-red-900/30",
   orange: "bg-orange-100 dark:bg-orange-900/30",
