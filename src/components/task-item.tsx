@@ -282,7 +282,7 @@ export function TaskItem({ task, variant = 'default' }: TaskItemProps) {
   return (
     <>
     {variant === 'my-day' && hasTime ? (
-        <div className="flex items-start gap-4">
+        <div className="flex items-center gap-4">
             <TimeBadge date={task.dueDate!} />
             <div className="flex-1">
                 {renderCard()}
