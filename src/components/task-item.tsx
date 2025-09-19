@@ -21,7 +21,7 @@ interface TaskItemProps {
 }
 
 const TimeBadge = ({ date }: { date: string }) => (
-    <div className="flex items-center justify-center rounded-md bg-muted px-2 py-1 text-sm font-semibold w-16">
+    <div className="flex items-center justify-center rounded-md bg-muted px-2 py-1 text-sm font-semibold w-20">
         <span>{format(parseISO(date), 'HH:mm')}</span>
     </div>
 );
@@ -45,44 +45,27 @@ export function TaskItem({ task, variant = 'default' }: TaskItemProps) {
 
   const toggleMyDay = () => {
     const updatedTask = { ...task, isMyDay: !task.isMyDay };
-    if (updatedTask.isMyDay && !updatedTask.dueDate) {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0); // Set to start of day for an "all-day" task
-        updatedTask.dueDate = today.toISOString();
+    if (!updatedTask.isMyDay) {
+        updatedTask.startTime = undefined; // Remove start time if removed from My Day
     }
     dispatch({ type: 'UPDATE_TASK', payload: updatedTask });
   };
 
-  const handleTimeChange = (e: React.FocusEvent<HTMLInputElement>) => {
+  const handleStartTimeChange = (e: React.FocusEvent<HTMLInputElement>) => {
     const time = e.target.value;
-    const date = task.dueDate ? parseISO(task.dueDate) : new Date();
     if (time.match(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/)) {
-      const [hours, minutes] = time.split(':');
-      date.setHours(parseInt(hours, 10));
-      date.setMinutes(parseInt(minutes, 10));
-      dispatch({ type: 'UPDATE_TASK', payload: { ...task, dueDate: date.toISOString() } });
+        const date = new Date();
+        const [hours, minutes] = time.split(':');
+        date.setHours(parseInt(hours, 10));
+        date.setMinutes(parseInt(minutes, 10));
+        dispatch({ type: 'UPDATE_TASK', payload: { ...task, startTime: date.toISOString() } });
     } else {
-      // If time is cleared or invalid, reset to midnight
-      date.setHours(0, 0, 0, 0);
-      dispatch({ type: 'UPDATE_TASK', payload: { ...task, dueDate: date.toISOString() } });
+        dispatch({ type: 'UPDATE_TASK', payload: { ...task, startTime: undefined } });
     }
   };
 
   const handleDateChange = (date: Date | undefined) => {
-    let newDueDate: string | undefined;
-
-    if (date) {
-      const currentDueDate = task.dueDate ? parseISO(task.dueDate) : new Date();
-      const newDate = new Date(date);
-      // Preserve existing time if it exists, otherwise default to midnight
-      newDate.setHours(currentDueDate.getHours(), currentDueDate.getMinutes(), currentDueDate.getSeconds(), currentDueDate.getMilliseconds());
-      newDueDate = newDate.toISOString();
-    } else {
-      // This handles the "Remove due date" case
-      newDueDate = undefined;
-    }
-    
-    dispatch({ type: 'UPDATE_TASK', payload: { ...task, dueDate: newDueDate } });
+    dispatch({ type: 'UPDATE_TASK', payload: { ...task, dueDate: date?.toISOString() } });
   }
 
   const handleDurationChange = (e: React.FocusEvent<HTMLInputElement>) => {
@@ -122,8 +105,6 @@ export function TaskItem({ task, variant = 'default' }: TaskItemProps) {
   const subtaskProgress = totalSubtasks > 0 ? (completedSubtasks / totalSubtasks) * 100 : 0;
   const taskTags = getTaskTags();
   const taskList = getTaskList;
-
-  const hasTime = task.dueDate && format(parseISO(task.dueDate), 'HH:mm') !== '00:00';
   
   const renderCard = () => (
     <div
@@ -191,7 +172,7 @@ export function TaskItem({ task, variant = 'default' }: TaskItemProps) {
                         </PopoverContent>
                     </Popover>
 
-                    { !(variant === 'my-day' && hasTime) && (
+                    { task.isMyDay && !(variant === 'my-day' && task.startTime) && (
                         <Popover>
                             <PopoverTrigger asChild>
                                 <button
@@ -199,7 +180,7 @@ export function TaskItem({ task, variant = 'default' }: TaskItemProps) {
                                     className="flex items-center gap-1.5 font-semibold rounded-md px-1 py-0.5 hover:bg-muted"
                                 >
                                     <Clock className="h-3 w-3" />
-                                    {hasTime ? format(parseISO(task.dueDate!), 'HH:mm') : 'Add time'}
+                                    {task.startTime ? format(parseISO(task.startTime), 'HH:mm') : 'Add start time'}
                                 </button>
                             </PopoverTrigger>
                              <PopoverContent className="w-48 p-2">
@@ -207,8 +188,8 @@ export function TaskItem({ task, variant = 'default' }: TaskItemProps) {
                                  <Input 
                                     type="text"
                                     placeholder="HH:MM"
-                                    defaultValue={hasTime ? format(parseISO(task.dueDate!), 'HH:mm') : ''}
-                                    onBlur={handleTimeChange}
+                                    defaultValue={task.startTime ? format(parseISO(task.startTime), 'HH:mm') : ''}
+                                    onBlur={handleStartTimeChange}
                                  />
                                </div>
                             </PopoverContent>
@@ -281,9 +262,9 @@ export function TaskItem({ task, variant = 'default' }: TaskItemProps) {
 
   return (
     <>
-    {variant === 'my-day' && hasTime ? (
+    {variant === 'my-day' && task.startTime ? (
         <div className="flex items-center gap-4">
-            <TimeBadge date={task.dueDate!} />
+            <TimeBadge date={task.startTime} />
             <div className="flex-1">
                 {renderCard()}
             </div>

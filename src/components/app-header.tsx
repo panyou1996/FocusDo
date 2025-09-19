@@ -62,15 +62,13 @@ export function AppHeader() {
 
       const result = await scheduleMyDayTasks(input);
       
-      const updatedTasks: Task[] = [];
       result.scheduledTasks.forEach(scheduledTask => {
         const originalTask = tasks.find(t => t.id === scheduledTask.id);
         if (originalTask) {
           const updatedTask: Task = {
             ...originalTask,
-            dueDate: scheduledTask.scheduledTime,
+            startTime: scheduledTask.startTime,
           };
-          updatedTasks.push(updatedTask);
           dispatch({ type: 'UPDATE_TASK', payload: updatedTask });
         }
       });

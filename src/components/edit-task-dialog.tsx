@@ -47,7 +47,7 @@ const taskSchema = z.object({
   description: z.string().optional(),
   listId: z.string().min(1, 'Please select a list'),
   dueDate: z.date().optional(),
-  time: z.string().optional(),
+  startTime: z.string().optional(),
   duration: z.coerce.number().int().positive().optional(),
   tagIds: z.array(z.string()).optional(),
   subtasks: z.array(subtaskSchema).optional(),
@@ -84,15 +84,16 @@ export function EditTaskDialog({ open, onOpenChange, task }: EditTaskDialogProps
     formState: { errors, isSubmitting },
   } = form;
 
+  const isMyDay = watch('isMyDay');
+
   useEffect(() => {
     if (task && open) {
-      const dueDate = task.dueDate ? parseISO(task.dueDate) : undefined;
       reset({ 
         title: task.title,
         description: task.description,
         listId: task.listId,
-        dueDate: dueDate,
-        time: dueDate && format(dueDate, 'HH:mm') !== '00:00' ? format(dueDate, 'HH:mm') : undefined,
+        dueDate: task.dueDate ? parseISO(task.dueDate) : undefined,
+        startTime: task.startTime ? format(parseISO(task.startTime), 'HH:mm') : undefined,
         duration: task.duration,
         tagIds: task.tagIds || [],
         subtasks: task.subtasks || [],
@@ -111,22 +112,18 @@ export function EditTaskDialog({ open, onOpenChange, task }: EditTaskDialogProps
   const selectedTags = watch('tagIds') || [];
 
   const onSubmit = (data: TaskFormValues) => {
-    let dueDate: string | undefined = undefined;
-    
-    if (data.isMyDay && !data.dueDate) {
+    let startTime: string | undefined = undefined;
+    if (data.isMyDay && data.startTime) {
         const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        dueDate = today.toISOString();
-    } else if (data.dueDate) {
-        const date = new Date(data.dueDate);
-        if (data.time) {
-            const [hours, minutes] = data.time.split(':');
-            date.setHours(parseInt(hours, 10), parseInt(minutes, 10));
-        } else {
-             date.setHours(0,0,0,0);
-        }
-        dueDate = date.toISOString();
+        const [hours, minutes] = data.startTime.split(':');
+        today.setHours(parseInt(hours, 10), parseInt(minutes, 10), 0, 0);
+        startTime = today.toISOString();
+    } else if (!data.isMyDay) {
+        startTime = undefined;
+    } else {
+        startTime = task.startTime; // Keep original if no new time is set
     }
+
 
     const updatedTask: Task = {
       ...task,
@@ -135,7 +132,8 @@ export function EditTaskDialog({ open, onOpenChange, task }: EditTaskDialogProps
       isMyDay: data.isMyDay,
       isImportant: data.isImportant,
       listId: data.listId,
-      dueDate: dueDate,
+      dueDate: data.dueDate?.toISOString(),
+      startTime: startTime,
       duration: data.duration,
       tagIds: data.tagIds || [],
       subtasks: (data.subtasks || []).map(st => ({...st, id: st.id || `SUB-${Date.now()}-${Math.random()}`})),
@@ -246,18 +244,20 @@ export function EditTaskDialog({ open, onOpenChange, task }: EditTaskDialogProps
                 </Popover>
               )}
             />
-            <Controller
-                name="time"
-                control={control}
-                render={({field}) => (
-                    <Input 
-                        type="text"
-                        className="h-9"
-                        placeholder="HH:MM"
-                        {...field}
-                    />
-                )}
-            />
+            {isMyDay && (
+                <Controller
+                    name="startTime"
+                    control={control}
+                    render={({field}) => (
+                        <Input 
+                            type="text"
+                            className="h-9"
+                            placeholder="Start time (HH:MM)"
+                            {...field}
+                        />
+                    )}
+                />
+            )}
           </div>
 
         <div className="grid grid-cols-2 gap-2">

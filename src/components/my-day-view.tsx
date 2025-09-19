@@ -13,19 +13,15 @@ export function MyDayView() {
   const { tasks } = useTasks();
 
   const myDayTasks = useMemo(() => {
-    // This sorting logic is important and should be preserved.
     return tasks
       .filter((task) => task.isMyDay)
       .sort((a, b) => {
         if (a.completed && !b.completed) return 1;
         if (!a.completed && b.completed) return -1;
 
-        const aHasTime = a.dueDate && format(parseISO(a.dueDate), 'HH:mm') !== '00:00';
-        const bHasTime = b.dueDate && format(parseISO(b.dueDate), 'HH:mm') !== '00:00';
-
-        if (aHasTime && bHasTime) return parseISO(a.dueDate!).getTime() - parseISO(b.dueDate!).getTime();
-        if (aHasTime) return -1;
-        if (bHasTime) return 1;
+        if (a.startTime && b.startTime) return parseISO(a.startTime).getTime() - parseISO(b.startTime).getTime();
+        if (a.startTime) return -1;
+        if (b.startTime) return 1;
 
         if (a.isImportant && !b.isImportant) return -1;
         if (!a.isImportant && b.isImportant) return 1;
@@ -35,8 +31,8 @@ export function MyDayView() {
   }, [tasks]);
 
 
-  const tasksWithTime = myDayTasks.filter(t => t.dueDate && format(parseISO(t.dueDate), 'HH:mm') !== '00:00');
-  const allDayTasks = myDayTasks.filter(t => !t.dueDate || format(parseISO(t.dueDate), 'HH:mm') === '00:00');
+  const tasksWithTime = myDayTasks.filter(t => t.startTime);
+  const allDayTasks = myDayTasks.filter(t => !t.startTime);
   
   return (
     <div className="space-y-8">

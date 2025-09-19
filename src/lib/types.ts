@@ -18,7 +18,8 @@ export type Task = {
   completed: boolean;
   isMyDay?: boolean;
   isImportant?: boolean;
-  dueDate?: string; // ISO string
+  dueDate?: string; // ISO string, deadline for the task
+  startTime?: string; // ISO string, scheduled start time for 'My Day'
   duration?: number; // in minutes
   listId: string;
   tagIds: string[];

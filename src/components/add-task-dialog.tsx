@@ -46,7 +46,7 @@ const taskSchema = z.object({
   description: z.string().optional(),
   listId: z.string().min(1, 'Please select a list'),
   dueDate: z.date().optional(),
-  time: z.string().optional(),
+  startTime: z.string().optional(),
   duration: z.coerce.number().int().positive().optional(),
   tagIds: z.array(z.string()).optional(),
   subtasks: z.array(subtaskSchema).optional(),
@@ -89,6 +89,8 @@ export function AddTaskDialog({ open, onOpenChange, defaultListId }: AddTaskDial
     watch,
     formState: { errors, isSubmitting },
   } = form;
+  
+  const isMyDay = watch('isMyDay');
 
   const { fields, append, remove } = useFieldArray({
     control,
@@ -98,23 +100,14 @@ export function AddTaskDialog({ open, onOpenChange, defaultListId }: AddTaskDial
   const selectedTags = watch('tagIds') || [];
 
   const onSubmit = (data: TaskFormValues) => {
-    let dueDate: string | undefined = undefined;
-    
-    if (data.isMyDay && !data.dueDate) {
+    let startTime: string | undefined = undefined;
+    if (data.isMyDay && data.startTime) {
         const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        dueDate = today.toISOString();
-    } else if (data.dueDate) {
-        const date = new Date(data.dueDate);
-        if (data.time) {
-            const [hours, minutes] = data.time.split(':');
-            date.setHours(parseInt(hours, 10), parseInt(minutes, 10));
-        } else {
-            date.setHours(0, 0, 0, 0);
-        }
-        dueDate = date.toISOString();
+        const [hours, minutes] = data.startTime.split(':');
+        today.setHours(parseInt(hours, 10), parseInt(minutes, 10), 0, 0);
+        startTime = today.toISOString();
     }
-
+    
     const newTask = {
       id: `TASK-${Date.now()}`,
       title: data.title,
@@ -123,7 +116,8 @@ export function AddTaskDialog({ open, onOpenChange, defaultListId }: AddTaskDial
       isMyDay: data.isMyDay,
       isImportant: data.isImportant,
       listId: data.listId,
-      dueDate: dueDate,
+      dueDate: data.dueDate?.toISOString(),
+      startTime: startTime,
       duration: data.duration,
       tagIds: data.tagIds || [],
       subtasks: (data.subtasks || []).map(st => ({...st, id: `SUB-${Date.now()}-${Math.random()}`})),
@@ -145,7 +139,7 @@ export function AddTaskDialog({ open, onOpenChange, defaultListId }: AddTaskDial
         title: '', 
         description: '', 
         dueDate: undefined,
-        time: undefined,
+        startTime: undefined,
         duration: undefined,
         tagIds: [],
         subtasks: [],
@@ -221,49 +215,51 @@ export function AddTaskDialog({ open, onOpenChange, defaultListId }: AddTaskDial
                 />
             </div>
 
-          <div className="grid grid-cols-2 gap-2">
-             <Controller
-              name="dueDate"
-              control={control}
-              render={({ field }) => (
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant={'outline'}
-                      size="sm"
-                      className={cn(
-                        'w-full justify-start text-left font-normal',
-                        !field.value && 'text-muted-foreground'
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {field.value ? format(field.value, 'MMM d, yyyy') : <span>Due date</span>}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar
-                      mode="single"
-                      selected={field.value}
-                      onSelect={field.onChange}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-              )}
-            />
-            <Controller
-                name="time"
-                control={control}
-                render={({field}) => (
-                    <Input 
-                        type="time"
-                        className="h-9"
-                        {...field}
-                        step="900"
+            <div className="grid grid-cols-2 gap-2">
+                <Controller
+                    name="dueDate"
+                    control={control}
+                    render={({ field }) => (
+                        <Popover>
+                        <PopoverTrigger asChild>
+                            <Button
+                            variant={'outline'}
+                            size="sm"
+                            className={cn(
+                                'w-full justify-start text-left font-normal',
+                                !field.value && 'text-muted-foreground'
+                            )}
+                            >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {field.value ? format(field.value, 'MMM d, yyyy') : <span>Due date</span>}
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0">
+                            <Calendar
+                            mode="single"
+                            selected={field.value}
+                            onSelect={field.onChange}
+                            initialFocus
+                            />
+                        </PopoverContent>
+                        </Popover>
+                    )}
+                />
+                {isMyDay && (
+                    <Controller
+                        name="startTime"
+                        control={control}
+                        render={({field}) => (
+                            <Input 
+                                type="text"
+                                className="h-9"
+                                placeholder="Start time (HH:MM)"
+                                {...field}
+                            />
+                        )}
                     />
                 )}
-            />
-          </div>
+            </div>
 
         <div className="grid grid-cols-2 gap-2">
             <Controller

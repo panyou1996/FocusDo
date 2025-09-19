@@ -107,7 +107,7 @@ export const initialTasks: Task[] = [
     completed: false,
     isMyDay: true,
     isImportant: false,
-    dueDate: today.toISOString(),
+    startTime: new Date(new Date().setHours(9, 0, 0, 0)).toISOString(),
     duration: 15,
     listId: 'tasks',
     tagIds: ['home', 'quick-task'],

@@ -16,7 +16,7 @@ const TaskSchema = z.object({
   title: z.string(),
   duration: z.number().optional(),
   isImportant: z.boolean().optional(),
-  dueDate: z.string().optional(), // Keep existing due date for context
+  dueDate: z.string().optional().describe("The task's deadline. This is a hard constraint."),
 });
 
 const ScheduleMyDayTasksInputSchema = z.object({
@@ -29,7 +29,7 @@ export type ScheduleMyDayTasksInput = z.infer<typeof ScheduleMyDayTasksInputSche
 const ScheduledTaskSchema = z.object({
   id: z.string(),
   // The AI should return a full ISO string with date and the new time.
-  scheduledTime: z.string().describe("The suggested new date and time for the task in ISO 8601 format."),
+  startTime: z.string().describe("The suggested new start time for the task in ISO 8601 format."),
 });
 
 const ScheduleMyDayTasksOutputSchema = z.object({
@@ -47,19 +47,20 @@ const prompt = ai.definePrompt({
   output: { schema: ScheduleMyDayTasksOutputSchema },
   prompt: `You are an expert personal assistant responsible for intelligently scheduling a user's day.
 
-You will be given a list of tasks, their estimated durations, and their importance. You will also receive the user's daily routine.
+You will be given a list of tasks, their estimated durations, their importance, and their deadlines (dueDate).
 
-Your goal is to assign a specific start time to each task for the current date: {{{currentDate}}}.
+Your goal is to assign a specific start time (startTime) to each task for the current date: {{{currentDate}}}.
 
 Follow these rules strictly:
 1.  Schedule tasks ONLY within the user's available time slots as defined in their schedule.
 2.  Prioritize 'isImportant: true' tasks. Try to schedule them earlier in the day if possible.
-3.  Respect the duration of each task. Ensure there is enough time in the schedule for it.
-4.  The end time of a task (start time + duration) CANNOT extend into a break or non-work period.
-5.  After each task, schedule a 15-minute break before the next task begins.
-6.  If a task has no duration, you MUST treat it as a 15-minute task for scheduling purposes.
-7.  The output for 'scheduledTime' for each task MUST be a complete ISO 8601 string, including the date and the new time you have assigned. For example: '2024-08-15T09:30:00.000Z'.
-8.  Do not schedule tasks during specified break times (e.g., lunch, dinner) or outside the user's specified free/working hours.
+3.  Respect the 'dueDate' as a hard deadline. The task MUST be scheduled to finish before its dueDate.
+4.  Respect the duration of each task. Ensure there is enough time in the schedule for it.
+5.  The end time of a task (startTime + duration) CANNOT extend into a break, non-work period, or past the task's dueDate.
+6.  After each task, schedule a 15-minute break before the next task begins. This break must also be within available time.
+7.  If a task has no duration, you MUST treat it as a 15-minute task for scheduling purposes.
+8.  The output for 'startTime' for each task MUST be a complete ISO 8601 string, including the date and the new time you have assigned. For example: '2024-08-15T09:30:00.000Z'.
+9.  Do not schedule tasks during specified break times (e.g., lunch, dinner) or outside the user's specified free/working hours.
 
 User's Schedule:
 {{{userSchedule}}}
@@ -68,7 +69,7 @@ Today's Date: {{{currentDate}}}
 
 Tasks to schedule:
 {{#each tasks}}
-- Task ID: {{id}}, Title: "{{title}}", Duration: {{duration}} mins, Important: {{isImportant}}
+- Task ID: {{id}}, Title: "{{title}}", Duration: {{duration}} mins, Important: {{isImportant}}, Due Date: {{dueDate}}
 {{/each}}
 
 Please provide the optimized schedule.`,
