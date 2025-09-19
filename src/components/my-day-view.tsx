@@ -73,7 +73,7 @@ export function MyDayView() {
     // A more advanced implementation would update start times based on drop position relative to other timed items.
   };
 
-  const scheduledItems = myDayItems.filter(item => !!item.startTime && (item.type === 'event' || !item.completed));
+  const scheduledItems = myDayItems.filter(item => !!item.startTime && (item.type === 'event' || (item.type === 'task' && !item.completed)));
   const allDayTasks = myDayItems.filter((item): item is Task & {type: 'task'} => item.type === 'task' && !item.startTime && !item.completed);
   const completedTasks = myDayItems.filter((item): item is Task & {type: 'task'} => item.type === 'task' && item.completed);
   

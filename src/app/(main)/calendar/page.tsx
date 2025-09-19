@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -21,9 +22,9 @@ export default function CalendarPage() {
 
   const tasksOnSelectedDate = useMemo(() => {
     if (!selectedDate) return [];
-    return tasksWithDueDate.filter((task) =>
-      isSameDay(parseISO(task.dueDate!), selectedDate)
-    );
+    return tasksWithDueDate
+      .filter((task) => isSameDay(parseISO(task.dueDate!), selectedDate))
+      .map(task => ({...task, type: 'task' as const}));
   }, [selectedDate, tasksWithDueDate]);
   
   const daysWithTasks = useMemo(() => {
@@ -76,7 +77,7 @@ export default function CalendarPage() {
                         Tasks for {format(selectedDate, 'MMMM d, yyyy')}
                     </h2>
                     {tasksOnSelectedDate.length > 0 ? (
-                        <TaskList tasks={tasksOnSelectedDate} />
+                        <TaskList items={tasksOnSelectedDate} droppableId="calendar-tasks" />
                     ) : (
                         <div className="text-center py-10 border-2 border-dashed rounded-lg">
                             <p className="text-muted-foreground">No tasks for this day.</p>

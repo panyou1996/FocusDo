@@ -8,13 +8,16 @@ import { Droppable } from 'react-beautiful-dnd';
 type Item = (Task & { type: 'task' }) | (CalendarEvent & { type: 'event' });
 
 interface TaskListProps {
-  items: Item[];
+  items?: Item[];
   variant?: 'default' | 'my-day';
   droppableId: string;
   isDropDisabled?: boolean;
 }
 
 export function TaskList({ items, variant = 'default', droppableId, isDropDisabled = false }: TaskListProps) {
+  if (!items) {
+    return null;
+  }
 
   if (items.length === 0 && droppableId !== 'completed-tasks') {
       return (

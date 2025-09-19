@@ -4,28 +4,33 @@
 import { TaskList } from '@/components/task-list';
 import { useTasks } from '@/hooks/use-tasks';
 import { isToday, isTomorrow, parseISO } from 'date-fns';
+import { useMemo } from 'react';
 
 export default function UpcomingPage() {
   const { tasks } = useTasks();
 
-  const upcomingTasks = tasks.filter((task) => {
-    if (!task.dueDate) return false;
-    const dueDate = parseISO(task.dueDate);
-    return isToday(dueDate) || isTomorrow(dueDate);
-  }).sort((a, b) => {
-    if (!a.dueDate || !b.dueDate) return 0;
-    return parseISO(a.dueDate).getTime() - parseISO(b.dueDate).getTime();
-  });
+  const todayTasks = useMemo(() => {
+    return tasks
+      .filter((task) => task.dueDate && isToday(parseISO(task.dueDate)))
+      .map(task => ({ ...task, type: 'task' as const }));
+  }, [tasks]);
+
+  const tomorrowTasks = useMemo(() => {
+    return tasks
+      .filter((task) => task.dueDate && isTomorrow(parseISO(task.dueDate)))
+      .map(task => ({ ...task, type: 'task' as const }));
+  }, [tasks]);
+
 
   return (
     <div className="space-y-8">
        <div>
         <h2 className="text-lg font-semibold mb-4">Due Today</h2>
-        <TaskList tasks={upcomingTasks.filter(t => t.dueDate && isToday(parseISO(t.dueDate)))} />
+        <TaskList items={todayTasks} droppableId="today-tasks" />
       </div>
        <div>
         <h2 className="text-lg font-semibold mb-4">Due Tomorrow</h2>
-        <TaskList tasks={upcomingTasks.filter(t => t.dueDate && isTomorrow(parseISO(t.dueDate)))} />
+        <TaskList items={tomorrowTasks} droppableId="tomorrow-tasks" />
       </div>
     </div>
   );
