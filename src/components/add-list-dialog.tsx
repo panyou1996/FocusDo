@@ -46,7 +46,10 @@ interface AddListDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
+import { useAuth } from '@/hooks/use-auth';
+
 export function AddListDialog({ open, onOpenChange }: AddListDialogProps) {
+  const { user } = useAuth();
   const dispatch = useTasksDispatch();
   const { toast } = useToast();
 
@@ -68,8 +71,18 @@ export function AddListDialog({ open, onOpenChange }: AddListDialogProps) {
   } = form;
 
   const onSubmit = (data: ListFormValues) => {
+    if (!user) {
+      toast({
+        title: '请先登录',
+        description: '您需要登录才能创建列表',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     const newList: List = {
       id: data.title.toLowerCase().replace(/\s+/g, '-'),
+      user_id: user.id,
       title: data.title,
       icon: data.icon,
       color: data.color,

@@ -61,7 +61,10 @@ interface AddTaskDialogProps {
   defaultListId?: string;
 }
 
+import { useAuth } from '@/hooks/use-auth';
+
 export function AddTaskDialog({ open, onOpenChange, defaultListId }: AddTaskDialogProps) {
+  const { user } = useAuth();
   const { lists, tags } = useTasksClient();
   const dispatch = useTasksDispatch();
   const { toast } = useToast();
@@ -110,8 +113,18 @@ export function AddTaskDialog({ open, onOpenChange, defaultListId }: AddTaskDial
         startTime = today.toISOString();
     }
     
+    if (!user) {
+      toast({
+        title: '请先登录',
+        description: '您需要登录才能创建任务',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     const newTask = {
       id: `TASK-${Date.now()}`,
+      user_id: user.id,
       title: data.title,
       description: data.description,
       completed: false,

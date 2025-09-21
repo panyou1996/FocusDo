@@ -13,6 +13,7 @@ export type Subtask = {
 
 export type Task = {
   id: string;
+  user_id: string;
   title: string;
   description?: string;
   completed: boolean;
@@ -30,6 +31,7 @@ export type Task = {
 
 export type List = {
   id: string;
+  user_id: string;
   title: string;
   icon: string; // Icon name as string
   color?:
@@ -46,9 +48,12 @@ export type List = {
 
 export type CalendarEvent = {
   id: string;
+  user_id: string;
   title: string;
+  description?: string;
   startTime: string; // ISO string
   endTime: string; // ISO string
+  location?: string;
   listId: string; // 改为与任务统一的listId
   completed?: boolean; // 添加完成状态
 };

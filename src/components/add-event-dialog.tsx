@@ -30,7 +30,10 @@ interface AddEventDialogProps {
   defaultListId?: string;
 }
 
+import { useAuth } from '@/hooks/use-auth';
+
 export function AddEventDialog({ open, onOpenChange, defaultListId }: AddEventDialogProps) {
+  const { user } = useAuth();
   const { lists } = useTasksClient();
   const dispatch = useTasksDispatch();
   const { toast } = useToast();
@@ -75,12 +78,22 @@ export function AddEventDialog({ open, onOpenChange, defaultListId }: AddEventDi
     const endDate = new Date(today);
     endDate.setHours(parseInt(endHours, 10), parseInt(endMinutes, 10), 0, 0);
 
+    if (!user) {
+      toast({
+        title: '请先登录',
+        description: '您需要登录才能创建日程',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     const newEvent: CalendarEvent = {
       id: `EVENT-${Date.now()}`,
       title: data.title,
       startTime: startDate.toISOString(),
       endTime: endDate.toISOString(),
       listId: data.listId,
+      user_id: user.id,
     };
 
     dispatch({ type: 'ADD_EVENT', payload: newEvent });

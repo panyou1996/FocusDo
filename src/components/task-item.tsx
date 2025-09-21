@@ -7,7 +7,7 @@ import { cn, getBorderColorClasses, listColorMap } from '@/lib/utils';
 import { format, isToday, isTomorrow, parseISO, addMinutes } from 'date-fns';
 import { Badge } from './ui/badge';
 import { Progress } from './ui/progress';
-import { Clock, Sun, X, CalendarDays, Star, Tag, Plus, Check as CheckIcon, Sparkles, Briefcase, Video } from 'lucide-react';
+import { Clock, Sun, X, CalendarDays, Star, Tag, Plus, Check as CheckIcon, Sparkles, Briefcase, Video, Trash2 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
@@ -276,6 +276,15 @@ export function TaskItem({ item, viewMode = 'detailed', index, isDragDisabled = 
     return format(date, 'MMM d, yyyy');
   };
 
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (task) {
+      dispatch({ type: 'DELETE_TASK', payload: task.id });
+    } else if (event) {
+      dispatch({ type: 'DELETE_EVENT', payload: event.id });
+    }
+  };
+
   const renderDetailedView = () => {
     const dueDateLabel = task ? getDueDateLabel() : null;
     const completedSubtasks = task?.subtasks?.filter(st => st.completed).length || 0;
@@ -308,14 +317,14 @@ export function TaskItem({ item, viewMode = 'detailed', index, isDragDisabled = 
             id={`item-${item.id}`}
             checked={item.completed || false}
             onCheckedChange={handleCheckedChange}
-            className="h-5 w-5 rounded-full mt-0.5 border-2 border-gray-300 data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-500"
+            className="h-5 w-5 rounded-full border-2 border-gray-300 data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-500"
             aria-label={`Mark ${item.type} "${item.title}" as ${item.completed ? 'incomplete' : 'complete'}`}
             data-interactive="true"
             onClick={(e) => e.stopPropagation()}
           />
           
           {task && taskList && (
-            <div className="flex-shrink-0 self-start mt-0.5">
+            <div className="flex-shrink-0 self-start">
               {isQuickEditMode === 'list' ? (
                 <div className="relative">
                   <Select 
@@ -360,7 +369,7 @@ export function TaskItem({ item, viewMode = 'detailed', index, isDragDisabled = 
           )}
           
           {event && (
-            <div className="flex-shrink-0 self-start mt-0.5">
+            <div className="flex-shrink-0 self-start">
               {isQuickEditMode === 'list' ? (
                 <div className="relative">
                   <Select 
@@ -595,22 +604,28 @@ export function TaskItem({ item, viewMode = 'detailed', index, isDragDisabled = 
             )}
           </div>
           
-          {task && (
-            <div className="flex items-center">
-              <Button data-interactive="true" variant="ghost" size="icon" onClick={toggleImportant} className="h-8 w-8 shrink-0">
-                <Star className={cn("h-4 w-4", task.isImportant ? "text-yellow-500 fill-yellow-500" : "text-muted-foreground")} />
-                <VisuallyHidden>{task.isImportant ? 'Remove importance' : 'Mark as important'}</VisuallyHidden>
-              </Button>
-              <Button data-interactive="true" variant="ghost" size="icon" onClick={toggleMyDay} className="h-8 w-8 shrink-0 rounded-full hover:bg-accent transition-all duration-200">
-                {task.isMyDay ? (
-                  <X className="h-4 w-4 text-red-500" />
-                ) : (
-                  <Sun className="h-4 w-4 text-yellow-500" />
-                )}
-                <VisuallyHidden>{task.isMyDay ? 'Remove from My Day' : 'Add to My Day'}</VisuallyHidden>
-              </Button>
-            </div>
-          )}
+          <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
+            {task && (
+              <>
+                <Button data-interactive="true" variant="ghost" size="icon" onClick={toggleImportant} className="h-8 w-8 shrink-0">
+                  <Star className={cn("h-4 w-4", task.isImportant ? "text-yellow-500 fill-yellow-500" : "text-muted-foreground")} />
+                  <VisuallyHidden>{task.isImportant ? 'Remove importance' : 'Mark as important'}</VisuallyHidden>
+                </Button>
+                <Button data-interactive="true" variant="ghost" size="icon" onClick={toggleMyDay} className="h-8 w-8 shrink-0 rounded-full hover:bg-accent transition-all duration-200">
+                  {task.isMyDay ? (
+                    <X className="h-4 w-4 text-red-500" />
+                  ) : (
+                    <Sun className="h-4 w-4 text-yellow-500" />
+                  )}
+                  <VisuallyHidden>{task.isMyDay ? 'Remove from My Day' : 'Add to My Day'}</VisuallyHidden>
+                </Button>
+              </>
+            )}
+            <Button data-interactive="true" variant="ghost" size="icon" onClick={handleDelete} className="h-8 w-8 shrink-0">
+              <Trash2 className="h-4 w-4 text-destructive" />
+              <VisuallyHidden>Delete</VisuallyHidden>
+            </Button>
+          </div>
         </div>
         
         {task?.subtasks && task.subtasks.length > 0 && (
@@ -785,8 +800,9 @@ export function TaskItem({ item, viewMode = 'detailed', index, isDragDisabled = 
             )}
         </div>
 
-        {isTask && task && (
-            <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          {isTask && task && (
+            <>
               <Button data-interactive="true" variant="ghost" size="icon" onClick={toggleImportant} className="h-8 w-8 shrink-0 rounded-full hover:bg-accent transition-all duration-200">
                   <Star className={cn("h-4 w-4", task.isImportant ? "text-yellow-500 fill-yellow-500" : "text-muted-foreground")} />
                   <VisuallyHidden>{task.isImportant ? 'Remove importance' : 'Mark as important'}</VisuallyHidden>
@@ -799,8 +815,13 @@ export function TaskItem({ item, viewMode = 'detailed', index, isDragDisabled = 
                   )}
                   <VisuallyHidden>{task.isMyDay ? 'Remove from My Day' : 'Add to My Day'}</VisuallyHidden>
               </Button>
-            </div>
-        )}
+            </>
+          )}
+          <Button data-interactive="true" variant="ghost" size="icon" onClick={handleDelete} className="h-8 w-8 shrink-0">
+            <Trash2 className="h-4 w-4 text-destructive" />
+            <VisuallyHidden>Delete</VisuallyHidden>
+          </Button>
+        </div>
       </div>
     );
   };

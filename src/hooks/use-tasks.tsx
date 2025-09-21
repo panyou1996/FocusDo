@@ -1,17 +1,17 @@
 'use client';
 
-import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useReducer, ReactNode } from 'react';
 import type { Task, List, Tag, CalendarEvent } from '@/lib/types';
-import { initialTasks, initialLists, initialTags, initialEvents } from '@/lib/data';
+import { supabase } from '@/lib/supabase';
 
-type AppState = {
+export type AppState = {
   tasks: Task[];
   lists: List[];
   tags: Tag[];
   events: CalendarEvent[];
 };
 
-type Action =
+export type Action =
   | { type: 'ADD_TASK'; payload: Task }
   | { type: 'UPDATE_TASK'; payload: Task }
   | { type: 'DELETE_TASK'; payload: string }
@@ -30,8 +30,15 @@ const AppDispatchContext = createContext<React.Dispatch<Action> | undefined>(und
 const appReducer = (state: AppState, action: Action): AppState => {
   switch (action.type) {
     case 'ADD_TASK':
-      return { ...state, tasks: [...state.tasks, action.payload] };
+      const newTask = { ...action.payload, id: action.payload.id || window.crypto.randomUUID() };
+      supabase.from('tasks').insert(newTask).then(({ error }) => {
+        if (error) console.error('Error adding task to Supabase', error);
+      });
+      return { ...state, tasks: [...state.tasks, newTask] };
     case 'UPDATE_TASK':
+      supabase.from('tasks').update(action.payload).eq('id', action.payload.id).then(({ error }) => {
+        if (error) console.error('Error updating task in Supabase', error);
+      });
       return {
         ...state,
         tasks: state.tasks.map((task) =>
@@ -39,13 +46,23 @@ const appReducer = (state: AppState, action: Action): AppState => {
         ),
       };
     case 'DELETE_TASK':
+      supabase.from('tasks').delete().eq('id', action.payload).then(({ error }) => {
+        if (error) console.error('Error deleting task from Supabase', error);
+      });
       return {
         ...state,
         tasks: state.tasks.filter((task) => task.id !== action.payload),
       };
     case 'ADD_EVENT':
-      return { ...state, events: [...state.events, action.payload] };
+      const newEvent = { ...action.payload, id: action.payload.id || window.crypto.randomUUID() };
+      supabase.from('events').insert(newEvent).then(({ error }) => {
+        if (error) console.error('Error adding event to Supabase', error);
+      });
+      return { ...state, events: [...state.events, newEvent] };
     case 'UPDATE_EVENT':
+      supabase.from('events').update(action.payload).eq('id', action.payload.id).then(({ error }) => {
+        if (error) console.error('Error updating event in Supabase', error);
+      });
       return {
         ...state,
         events: state.events.map((event) =>
@@ -53,27 +70,34 @@ const appReducer = (state: AppState, action: Action): AppState => {
         ),
       };
     case 'DELETE_EVENT':
+      supabase.from('events').delete().eq('id', action.payload).then(({ error }) => {
+        if (error) console.error('Error deleting event from Supabase', error);
+      });
       return {
         ...state,
         events: state.events.filter((event) => event.id !== action.payload),
       };
-    case 'ADD_TAG':
-        // Avoid adding duplicate tags
-        if (state.tags.some(tag => tag.id === action.payload.id)) {
-            return state;
-        }
-        return { ...state, tags: [...state.tags, action.payload] };
     case 'ADD_LIST':
-        if (state.lists.some(list => list.id === action.payload.id)) {
+        const newList = { ...action.payload, id: action.payload.id || window.crypto.randomUUID() };
+        supabase.from('lists').insert(newList).then(({ error }) => {
+            if (error) console.error('Error adding list to Supabase', error);
+        });
+        if (state.lists.some(list => list.id === newList.id)) {
             return state;
         }
-        return { ...state, lists: [...state.lists, action.payload] };
+        return { ...state, lists: [...state.lists, newList] };
     case 'UPDATE_LIST':
+        supabase.from('lists').update(action.payload).eq('id', action.payload.id).then(({ error }) => {
+            if (error) console.error('Error updating list in Supabase', error);
+        });
         return {
             ...state,
             lists: state.lists.map(list => list.id === action.payload.id ? action.payload : list)
         };
     case 'DELETE_LIST':
+        supabase.from('lists').delete().eq('id', action.payload).then(({ error }) => {
+            if (error) console.error('Error deleting list from Supabase', error);
+        });
         return {
             ...state,
             lists: state.lists.filter(list => list.id !== action.payload),
@@ -86,32 +110,10 @@ const appReducer = (state: AppState, action: Action): AppState => {
   }
 };
 
-const getInitialState = (): AppState => {
-  const initialState = { tasks: initialTasks, lists: initialLists, tags: initialTags, events: initialEvents };
-  try {
-    const item = window.localStorage.getItem('focus-do-state');
-    if (item) {
-      const savedState = JSON.parse(item);
-      // Ensure events are also loaded, or fall back to initialEvents
-      return { ...initialState, ...savedState, events: savedState.events || initialEvents };
-    }
-    return initialState;
-  } catch (error) {
-    console.error('Error reading from localStorage', error);
-    return initialState;
-  }
-};
+const initialState: AppState = { tasks: [], lists: [], tags: [], events: [] };
 
 export const TasksProvider = ({ children }: { children: ReactNode }) => {
-  const [state, dispatch] = useReducer(appReducer, getInitialState());
-
-  useEffect(() => {
-    try {
-      window.localStorage.setItem('focus-do-state', JSON.stringify(state));
-    } catch (error) {
-      console.error('Error writing to localStorage', error);
-    }
-  }, [state]);
+  const [state, dispatch] = useReducer(appReducer, initialState);
 
   return (
     <AppStateContext.Provider value={state}>

@@ -34,6 +34,8 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
 
 
+import { CloudSyncStatus } from './CloudSyncStatus';
+
 export function MainSidebar() {
   const { lists, tags } = useTasksClient();
   const dispatch = useTasksDispatch();
@@ -199,6 +201,7 @@ export function MainSidebar() {
 
         </SidebarContent>
         <SidebarFooter>
+          {user && <CloudSyncStatus />}
           {user ? (
             <div className="flex items-center gap-3 p-2">
               <Avatar className="h-9 w-9">
