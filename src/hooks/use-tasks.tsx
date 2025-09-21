@@ -89,7 +89,7 @@ const appReducer = (state: AppState, action: Action): AppState => {
 const getInitialState = (): AppState => {
   const initialState = { tasks: initialTasks, lists: initialLists, tags: initialTags, events: initialEvents };
   try {
-    const item = window.localStorage.getItem('aqua-do-state');
+    const item = window.localStorage.getItem('focus-do-state');
     if (item) {
       const savedState = JSON.parse(item);
       // Ensure events are also loaded, or fall back to initialEvents
@@ -107,7 +107,7 @@ export const TasksProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     try {
-      window.localStorage.setItem('aqua-do-state', JSON.stringify(state));
+      window.localStorage.setItem('focus-do-state', JSON.stringify(state));
     } catch (error) {
       console.error('Error writing to localStorage', error);
     }

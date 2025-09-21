@@ -2,12 +2,12 @@
 const scriptContent = `
 console.log('=== localStorage State Check ===');
 
-// 检查localStorage中的aqua-do-state
-const aquaDoState = localStorage.getItem('aqua-do-state');
-if (aquaDoState) {
+// 检查localStorage中的focus-do-state
+const focusDoState = localStorage.getItem('focus-do-state');
+if (focusDoState) {
   try {
-    const parsedState = JSON.parse(aquaDoState);
-    console.log('aqua-do-state found:');
+    const parsedState = JSON.parse(focusDoState);
+    console.log('focus-do-state found:');
     console.log('- Tasks count:', parsedState.tasks ? parsedState.tasks.length : 'N/A');
     console.log('- Lists count:', parsedState.lists ? parsedState.lists.length : 'N/A');
     
@@ -29,10 +29,10 @@ if (aquaDoState) {
       }
     }
   } catch (error) {
-    console.log('Error parsing aqua-do-state:', error.message);
+    console.log('Error parsing focus-do-state:', error.message);
   }
 } else {
-  console.log('No aqua-do-state found in localStorage');
+  console.log('No focus-do-state found in localStorage');
 }
 
 // 检查所有localStorage项
@@ -41,7 +41,7 @@ for (let i = 0; i < localStorage.length; i++) {
   const key = localStorage.key(i);
   const value = localStorage.getItem(key);
   console.log(\`Key: \${key}, Value length: \${value.length}\`);
-  if (key === 'aqua-do-state') {
+  if (key === 'focus-do-state') {
     console.log('  (Already shown above)');
   }
 }

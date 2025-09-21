@@ -1,4 +1,4 @@
-# **App Name**: AquaDo
+# **App Name**: FocusDo
 
 ## Core Features:
 

@@ -17,6 +17,8 @@ export function useSupabaseSync() {
     try {
       setSyncing(true);
       
+      console.log(`Preparing to sync ${tasks.length} tasks to cloud`);
+      
       // 准备任务数据
       const tasksToSync = tasks.map(task => ({
         id: task.id,
@@ -32,16 +34,25 @@ export function useSupabaseSync() {
         due_date: task.dueDate || null,
         list_id: task.listId || 'inbox',
         tags: task.tagIds || [],
+        created_at: task.createdAt || new Date().toISOString(),
+        updated_at: new Date().toISOString()
       }));
 
-      // 使用 upsert 来插入或更新
+      console.log('Task data prepared for sync:', JSON.stringify(tasksToSync.slice(0, 3), null, 2) + (tasksToSync.length > 3 ? '...' : ''));
+      
+      // 使用 upsert 来插入或更新，添加 onConflict 来明确指定冲突键
       const { error } = await supabase
         .from('tasks')
-        .upsert(tasksToSync);
+        .upsert(tasksToSync, { onConflict: 'id, user_id' })
+        .select(); // 添加 select 来获取插入/更新的结果
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
 
       setLastSyncTime(new Date());
+      console.log(`Successfully synced ${tasks.length} tasks to cloud`);
       return { success: true };
     } catch (error) {
       console.error('Error syncing tasks to cloud:', error);

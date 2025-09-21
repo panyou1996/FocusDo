@@ -29,8 +29,8 @@ if (fs.existsSync(localStoragePath)) {
   }
 }
 
-// 检查aqua-do-state
-const item = window.localStorage.getItem('aqua-do-state');
+// 检查focus-do-state
+const item = window.localStorage.getItem('focus-do-state');
 if (item) {
   try {
     const state = JSON.parse(item);
@@ -48,5 +48,5 @@ if (item) {
     console.error('Error parsing localStorage data', error);
   }
 } else {
-  console.log('No aqua-do-state found in localStorage');
+  console.log('No focus-do-state found in localStorage');
 }

@@ -11,8 +11,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'AquaDo',
-  description: 'A modern task management app by AquaDo',
+  title: 'FocusDo',
+  description: 'A modern task management app by FocusDo',
 };
 
 export default function RootLayout({

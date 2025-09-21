@@ -7,6 +7,7 @@ import { useParams } from 'next/navigation';
 import { useMemo } from 'react';
 import { DndProvider } from '@/components/dnd-provider';
 import * as Lucide from 'lucide-react';
+import { SidebarTrigger } from '@/components/ui/sidebar';
 
 export default function ListPage() {
   const params = useParams();
@@ -52,10 +53,15 @@ export default function ListPage() {
     <div className="space-y-6">
       {/* 页面标题 */}
       <div className="flex items-center gap-3 py-2">
-        <div className={`flex items-center justify-center w-8 h-8 rounded-full ${
-          colorClasses[currentList.color || 'blue']
-        }`}>
-          <IconComponent className="h-4 w-4" />
+        <div className="flex items-center gap-3">
+          {/* Sidebar trigger for mobile */}
+          <SidebarTrigger className="md:hidden" />
+          
+          <div className={`flex items-center justify-center w-8 h-8 rounded-full ${
+            colorClasses[currentList.color || 'blue']
+          }`}>
+            <IconComponent className="h-4 w-4" />
+          </div>
         </div>
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-gray-900">{currentList.title}</h1>

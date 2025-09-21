@@ -23,7 +23,7 @@ import {
   SelectValue,
 } from './ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
-import { Calendar as CalendarIcon, List, Plus, Tag, Trash2, X, Clock, CheckSquare, Check, Star, Sun, Save, PlusCircle } from 'lucide-react';
+import { Calendar as CalendarIcon, List, Plus, Tag, Trash2, X, Clock, CheckSquare, Check, Star, Sun, Save, PlusCircle, Pencil } from 'lucide-react';
 import { Calendar } from './ui/calendar';
 import { format, parseISO } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
@@ -170,7 +170,9 @@ export function EditTaskDialog({ open, onOpenChange, task }: EditTaskDialogProps
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-2xl max-h-[85vh] flex flex-col p-0">
-        <DialogTitle>
+        <DialogTitle className="text-lg font-medium border-b pb-2">
+          <Pencil className="inline-block mr-2 h-5 w-5 text-primary" />
+          Edit Task
           <VisuallyHidden>Edit Task</VisuallyHidden>
         </DialogTitle>
         <form onSubmit={handleSubmit(onSubmit)} className="flex-1 flex flex-col min-h-0">

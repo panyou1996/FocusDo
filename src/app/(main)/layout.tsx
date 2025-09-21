@@ -3,6 +3,7 @@
 
 import { MainSidebar } from '@/components/main-sidebar';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
+import { CloudSyncManager } from '@/components/cloud-sync-manager';
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Plus, Calendar, Sparkles } from 'lucide-react';
@@ -190,6 +191,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </div>
         <AddTaskDialog open={isDialogOpen} onOpenChange={setIsDialogOpen} />
         <AddEventDialog open={isEventDialogOpen} onOpenChange={setIsEventDialogOpen} />
+        <CloudSyncManager />
       </SidebarInset>
     </SidebarProvider>
   );

@@ -1,6 +1,6 @@
-# AquaDo - A Modern Task Management App
+# FocusDo - A Modern Task Management App
 
-# AquaDo - 智能任务管理应用
+# FocusDo - 智能任务管理应用，提升专注力
 
 A sophisticated task management application built with Next.js and Firebase, featuring intelligent scheduling to help users organize their day with minimal effort.
 
@@ -23,9 +23,9 @@ A sophisticated task management application built with Next.js and Firebase, fea
 
 ## Core Philosophy
 
-AquaDo is built on a simple yet powerful philosophy: **Clearly separating the urgency of a deadline from the intention of a daily plan.** It empowers users to first capture everything, then consciously curate a focused plan for each day, enhanced by intelligent, AI-powered scheduling.
+FocusDo is built on a simple yet powerful philosophy: **Clearly separating the urgency of a deadline from the intention of a daily plan.** It empowers users to first capture everything, then consciously curate a focused plan for each day, enhanced by intelligent, AI-powered scheduling.
 
-Unlike other apps that can become cluttered digital junk drawers, AquaDo guides you toward mindful productivity through three core concepts:
+Unlike other apps that can become cluttered digital junk drawers, FocusDo guides you toward mindful productivity through three core concepts:
 
 1.  **Strict Distinction Between Due Date & Start Time**:
     *   **Due Date (截止日期)**: This is a hard deadline. It defines *when* a task absolutely must be completed. It's about commitment.
@@ -34,17 +34,17 @@ Unlike other apps that can become cluttered digital junk drawers, AquaDo guides 
 2.  **"My Day" as the Daily Cockpit**:
     *   The "My Day" view is your command center for the day. It's a curated, focused list of tasks you intend to accomplish.
     *   Tasks don't appear here automatically (unless they are due today and you choose to add them). This intentional act of planning prevents overwhelm.
-    *   **AI Smart Schedule**: This is AquaDo's signature feature. With a single click, it analyzes your daily routine, task durations, and deadlines to intelligently assign a start time to every task in your "My Day" view, transforming a simple to-do list into an actionable schedule.
+    *   **AI Smart Schedule**: This is FocusDo's signature feature. With a single click, it analyzes your daily routine, task durations, and deadlines to intelligently assign a start time to every task in your "My Day" view, transforming a simple to-do list into an actionable schedule.
 
 3.  **Flexible & Contextual Organization**:
-    *   **Views for Every Need**: Beyond "My Day," AquaDo provides dedicated views for what's **Upcoming** (due today/tomorrow) and a full **Calendar** view for long-term planning.
+    *   **Views for Every Need**: Beyond "My Day," FocusDo provides dedicated views for what's **Upcoming** (due today/tomorrow) and a full **Calendar** view for long-term planning.
     *   **Classic Organization**: Structure your tasks with traditional **Lists** (e.g., Work, Personal) and **Tags** (e.g., #urgent, #project-aqua) for powerful, cross-functional filtering.
 
 ## AI Smart Schedule - 智能调度功能
 
 ### 功能概述
 
-AquaDo的AI智能调度是一项强大的功能，它能够一键为您的"My Day"任务分配最佳的开始时间，将简单的待办事项列表转化为可执行的日程表。该功能充分考虑了您的工作习惯、任务优先级和时间偏好，帮助您更高效地规划每一天。
+FocusDo的AI智能调度是一项强大的功能，它能够一键为您的"My Day"任务分配最佳的开始时间，将简单的待办事项列表转化为可执行的日程表。该功能充分考虑了您的工作习惯、任务优先级和时间偏好，帮助您更高效地规划每一天。
 
 ### 如何使用智能调度
 
@@ -101,12 +101,12 @@ AI智能调度功能基于以下核心逻辑工作：
 
 ## 页面组件说明
 
-AquaDo应用包含多个页面组件，每个组件都有其特定功能和实现原理。以下是对每个页面组件的详细说明：
+FocusDo应用包含多个页面组件，每个组件都有其特定功能和实现原理。以下是对每个页面组件的详细说明：
 
 ### 1. My Day 页面
 
 #### 功能概述
-"我的一天"页面是AquaDo应用的核心界面，作为用户每天的任务控制台。它显示今天的日期、日程安排和用户计划当天完成的任务列表。
+"我的一天"页面是FocusDo应用的核心界面，作为用户每天的任务控制台。它显示今天的日期、日程安排和用户计划当天完成的任务列表。
 
 #### 实现原理
 - **数据获取**：通过`useTasks`钩子获取所有任务和事件数据
@@ -297,12 +297,12 @@ ScheduleView组件是智能调度功能的核心UI组件，它可视化地显示
 
 *   **Similarities**: The "My Day" concept is inspired by Microsoft To Do, providing a clean slate for daily planning.
 *   **Key Differences**:
-    *   **AI Scheduling**: Microsoft To Do suggests tasks to add to your day, but AquaDo takes it a step further. Our "Smart Schedule" doesn't just suggest *what* to do, but *when* to do it, creating a concrete, timed schedule for your entire day.
-    *   **Clearer Time-Blocking**: AquaDo's explicit `startTime` is designed for time-blocking, whereas To Do's "Reminders" are more about notifications.
+    *   **AI Scheduling**: Microsoft To Do suggests tasks to add to your day, but FocusDo takes it a step further. Our "Smart Schedule" doesn't just suggest *what* to do, but *when* to do it, creating a concrete, timed schedule for your entire day.
+*   **Clearer Time-Blocking**: FocusDo's explicit `startTime` is designed for time-blocking, whereas To Do's "Reminders" are more about notifications.
 
 ### vs. Sorted³
 
 *   **Similarities**: Both apps excel at merging tasks and calendars to create a daily schedule.
 *   **Key Differences**:
-    *   **Automation & Simplicity**: Sorted³ is famous for its powerful (but sometimes complex) gestures and manual "auto-schedule" feature. AquaDo's AI "Smart Schedule" is a one-click process that requires less manual input. It leverages AI to understand your natural language schedule (e.g., "I work from 9 to 5 with a lunch break") instead of requiring you to configure time blocks manually.
-    *   **Flexibility**: AquaDo allows for "unscheduled" tasks to coexist within the "My Day" view. This provides a more flexible buffer for tasks that you want to accomplish today but don't need to assign to a specific time slot, offering a middle-ground between a rigid schedule and a simple list.
+    *   **Automation & Simplicity**: Sorted³ is famous for its powerful (but sometimes complex) gestures and manual "auto-schedule" feature. FocusDo's AI "Smart Schedule" is a one-click process that requires less manual input. It leverages AI to understand your natural language schedule (e.g., "I work from 9 to 5 with a lunch break") instead of requiring you to configure time blocks manually.
+*   **Flexibility**: FocusDo allows for "unscheduled" tasks to coexist within the "My Day" view. This provides a more flexible buffer for tasks that you want to accomplish today but don't need to assign to a specific time slot, offering a middle-ground between a rigid schedule and a simple list.

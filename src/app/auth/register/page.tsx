@@ -141,18 +141,18 @@ export default function RegisterPage() {
         <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
           <CardHeader className="text-center space-y-4">
             <motion.div
-              initial={{ scale: 0.8 }}
-              animate={{ scale: 1 }}
-              transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-              className="flex justify-center"
-            >
-              <div className="flex items-center gap-2">
-                <Icons.logo className="size-8 text-primary" />
-                <span className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
-                  AquaDo
-                </span>
-              </div>
-            </motion.div>
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="flex justify-center"
+              >
+                <div className="flex items-center gap-2">
+                  <Icons.logo className="size-8 text-primary" />
+                  <span className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+                    FocusDo
+                  </span>
+                </div>
+              </motion.div>
             <div>
               <CardTitle className="text-2xl font-bold text-gray-900">创建账户</CardTitle>
               <CardDescription className="text-gray-600">

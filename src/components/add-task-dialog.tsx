@@ -175,7 +175,9 @@ export function AddTaskDialog({ open, onOpenChange, defaultListId }: AddTaskDial
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-2xl max-h-[85vh] flex flex-col">
-        <DialogTitle>
+        <DialogTitle className="text-lg font-medium border-b pb-2">
+          <Plus className="inline-block mr-2 h-5 w-5 text-primary" />
+          Add New Task
           <VisuallyHidden>Add New Task</VisuallyHidden>
         </DialogTitle>
         <form onSubmit={handleSubmit(onSubmit)} className="flex-1 flex flex-col min-h-0">

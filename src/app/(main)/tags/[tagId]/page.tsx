@@ -7,6 +7,7 @@ import { useParams } from 'next/navigation';
 import { useMemo } from 'react';
 import { DndProvider } from '@/components/dnd-provider';
 import { Tag, Hash } from 'lucide-react';
+import { SidebarTrigger } from '@/components/ui/sidebar';
 
 export default function TagPage() {
   const params = useParams();
@@ -38,9 +39,14 @@ export default function TagPage() {
   return (
     <div className="space-y-6">
       {/* 页面标题 */}
-      <div className="flex items-center gap-3 py-2">
-        <div className="flex items-center justify-center w-8 h-8 bg-indigo-100 rounded-full">
-          <Hash className="h-4 w-4 text-indigo-600" />
+      <div className="flex items-center justify-between py-2">
+        <div className="flex items-center gap-3">
+          {/* Sidebar trigger for mobile */}
+          <SidebarTrigger className="md:hidden" />
+          
+          <div className="flex items-center justify-center w-8 h-8 bg-indigo-100 rounded-full">
+            <Hash className="h-4 w-4 text-indigo-600" />
+          </div>
         </div>
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-gray-900">#{currentTag.label}</h1>

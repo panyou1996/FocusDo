@@ -52,7 +52,7 @@ export default function LoginPage() {
       if (data?.user) {
         toast({
           title: "登录成功",
-          description: "欢迎回到 AquaDo！"
+          description: "欢迎回到 FocusDo！"
         });
         
         router.push('/my-day');
@@ -116,7 +116,7 @@ export default function LoginPage() {
               <div className="flex items-center gap-2">
                 <Icons.logo className="size-8 text-primary" />
                 <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                  AquaDo
+                  FocusDo
                 </span>
               </div>
             </motion.div>
