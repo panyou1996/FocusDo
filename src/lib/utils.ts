@@ -53,7 +53,8 @@ const borderColorMap: Record<string, string> = {
 
 export const getBorderColorClasses = (color?: string): string => {
   if (!color || !borderColorMap[color]) {
-    return "border-border";
+    // 默认使用灰色边框而不是空字符串
+    return "border-gray-500";
   }
   return borderColorMap[color];
 };
@@ -76,8 +77,14 @@ export const getSidebarListColorClasses = (
   color?: List["color"],
   isActive?: boolean
 ): string => {
-  if (!color || !isActive) {
+  if (!color) {
     return "data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground";
   }
+  
+  if (!isActive) {
+    // 即使非活动状态，也要应用颜色相关的悬停效果
+    return cn(sidebarListColorMap[color], 'hover:bg-opacity-70');
+  }
+  
   return cn(sidebarListColorMap[color], 'hover:bg-opacity-70');
 }

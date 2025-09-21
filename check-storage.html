@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Check Storage</title>
+</head>
+<body>
+    <h1>Check Storage</h1>
+    <script>
+        try {
+            const item = window.localStorage.getItem('aqua-do-state');
+            if (item) {
+                const state = JSON.parse(item);
+                console.log('Current tasks in localStorage:');
+                console.table(state.tasks);
+                console.log('Current lists in localStorage:');
+                console.table(state.lists);
+                
+                // Display in the page
+                document.body.innerHTML += '<h2>Tasks:</h2><pre>' + JSON.stringify(state.tasks, null, 2) + '</pre>';
+                document.body.innerHTML += '<h2>Lists:</h2><pre>' + JSON.stringify(state.lists, null, 2) + '</pre>';
+            } else {
+                console.log('No aqua-do-state found in localStorage');
+                document.body.innerHTML += '<p>No aqua-do-state found in localStorage</p>';
+            }
+        } catch (error) {
+            console.error('Error reading from localStorage', error);
+            document.body.innerHTML += '<p>Error reading from localStorage: ' + error.message + '</p>';
+        }
+    </script>
+</body>
+</html>

@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
 import { Sheet, SheetContent } from "@/components/ui/sheet"
 import { Skeleton } from "@/components/ui/skeleton"
+import { VisuallyHidden } from "@/components/ui/visually-hidden"
 import {
   Tooltip,
   TooltipContent,
@@ -279,7 +280,7 @@ const SidebarTrigger = React.forwardRef<
       {...props}
     >
       <PanelLeft />
-      <span className="sr-only">Toggle Sidebar</span>
+      <VisuallyHidden>Toggle Sidebar</VisuallyHidden>
     </Button>
   )
 })

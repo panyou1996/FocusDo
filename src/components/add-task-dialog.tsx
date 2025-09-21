@@ -5,11 +5,13 @@ import {
   Dialog,
   DialogContent,
   DialogFooter,
+  DialogTitle,
 } from '@/components/ui/dialog';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Textarea } from './ui/textarea';
-import { useTasks, useTasksDispatch } from '@/hooks/use-tasks';
+import { useTasksClient, useTasksDispatch } from '@/hooks/use-tasks';
 import { useForm, Controller, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -21,7 +23,7 @@ import {
   SelectValue,
 } from './ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
-import { Calendar as CalendarIcon, List, Plus, Tag, Trash2, Clock, CheckSquare, Check, Star, Sun, Palette, PlusCircle } from 'lucide-react';
+import { Calendar as CalendarIcon, List, Plus, Tag, Trash2, Clock, CheckSquare, Check, Star, Sun, Palette, PlusCircle, X } from 'lucide-react';
 import { Calendar } from './ui/calendar';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
@@ -60,7 +62,7 @@ interface AddTaskDialogProps {
 }
 
 export function AddTaskDialog({ open, onOpenChange, defaultListId }: AddTaskDialogProps) {
-  const { lists, tags } = useTasks();
+  const { lists, tags } = useTasksClient();
   const dispatch = useTasksDispatch();
   const { toast } = useToast();
   const [newSubtask, setNewSubtask] = useState('');
@@ -70,7 +72,7 @@ export function AddTaskDialog({ open, onOpenChange, defaultListId }: AddTaskDial
   const form = useForm<TaskFormValues>({
     resolver: zodResolver(taskSchema),
     defaultValues: {
-      listId: defaultListId || 'tasks',
+      listId: defaultListId || 'inbox',
       tagIds: [],
       subtasks: [],
       isMyDay: false,
@@ -135,7 +137,7 @@ export function AddTaskDialog({ open, onOpenChange, defaultListId }: AddTaskDial
   React.useEffect(() => {
     if (open) {
       reset({ 
-        listId: defaultListId || 'tasks', 
+        listId: defaultListId || 'inbox', 
         title: '', 
         description: '', 
         dueDate: undefined,
@@ -173,8 +175,11 @@ export function AddTaskDialog({ open, onOpenChange, defaultListId }: AddTaskDial
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-2xl max-h-[85vh] flex flex-col">
+        <DialogTitle>
+          <VisuallyHidden>Add New Task</VisuallyHidden>
+        </DialogTitle>
         <form onSubmit={handleSubmit(onSubmit)} className="flex-1 flex flex-col min-h-0">
-            <ScrollArea className="flex-1">
+            <ScrollArea className="flex-1 w-full">
                 <div className="space-y-4 pt-2 pb-6 px-1">
                     <div>
                         <Input 
@@ -256,13 +261,28 @@ export function AddTaskDialog({ open, onOpenChange, defaultListId }: AddTaskDial
                                 <Controller
                                     name="startTime"
                                     control={control}
-                                    render={({field}) => (
-                                        <Input 
-                                            type="text"
-                                            className="h-9"
-                                            placeholder="Start time (HH:MM)"
-                                            {...field}
-                                        />
+                                    render={({field: { value, onChange }}) => (
+                                        <div className="relative">
+                                            <Input 
+                                                type="time"
+                                                className="h-9 pr-8"
+                                                placeholder="开始时间"
+                                                value={value || ''}
+                                                onChange={(e) => onChange(e.target.value)}
+                                            />
+                                            {value && (
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 p-0 hover:bg-muted rounded-full"
+                                                    onClick={() => onChange('')}
+                                                    title="清空开始时间"
+                                                >
+                                                    <X className="h-3 w-3" />
+                                                </Button>
+                                            )}
+                                        </div>
                                     )}
                                 />
                             )}
@@ -273,16 +293,13 @@ export function AddTaskDialog({ open, onOpenChange, defaultListId }: AddTaskDial
                                 name="duration"
                                 control={control}
                                 render={({ field: { onChange, ...field } }) => (
-                                    <div className="relative">
-                                        <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                        <Input 
-                                            type="number"
-                                            placeholder="Duration (mins)"
-                                            className="pl-9 h-9"
-                                            onChange={e => onChange(e.target.value === '' ? undefined : +e.target.value)}
-                                            {...field}
-                                        />
-                                    </div>
+                                    <Input 
+                                        type="number"
+                                        placeholder="持续时间 (分钟)"
+                                        className="h-9"
+                                        onChange={e => onChange(e.target.value === '' ? undefined : +e.target.value)}
+                                        {...field}
+                                    />
                                 )}
                             />
                              <Controller
@@ -292,9 +309,6 @@ export function AddTaskDialog({ open, onOpenChange, defaultListId }: AddTaskDial
                                 <Select onValueChange={field.onChange} value={field.value}>
                                     <SelectTrigger className="w-full h-9 px-3">
                                         <div className="flex items-center gap-2">
-                                            {selectedList?.color && (
-                                                <div className={cn("h-2.5 w-2.5 rounded-full", listColorMap[selectedList.color])} />
-                                            )}
                                             <SelectValue placeholder="Select a list" />
                                         </div>
                                     </SelectTrigger>

@@ -5,11 +5,13 @@ import {
   Dialog,
   DialogContent,
   DialogFooter,
+  DialogTitle,
 } from '@/components/ui/dialog';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Textarea } from './ui/textarea';
-import { useTasks, useTasksDispatch } from '@/hooks/use-tasks';
+import { useTasksClient, useTasksDispatch } from '@/hooks/use-tasks';
 import { useForm, Controller, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -61,7 +63,7 @@ interface EditTaskDialogProps {
 }
 
 export function EditTaskDialog({ open, onOpenChange, task }: EditTaskDialogProps) {
-  const { lists, tags } = useTasks();
+  const { lists, tags } = useTasksClient();
   const dispatch = useTasksDispatch();
   const { toast } = useToast();
   const [newSubtask, setNewSubtask] = useState('');
@@ -117,12 +119,10 @@ export function EditTaskDialog({ open, onOpenChange, task }: EditTaskDialogProps
         const [hours, minutes] = data.startTime.split(':');
         today.setHours(parseInt(hours, 10), parseInt(minutes, 10), 0, 0);
         startTime = today.toISOString();
-    } else if (!data.isMyDay) {
-        startTime = undefined;
     } else {
-        startTime = task.startTime; // Keep original if no new time is set
+        // 如果不是"我的一天"或者没有设置时间，则清空startTime
+        startTime = undefined;
     }
-
 
     const updatedTask: Task = {
       ...task,
@@ -170,8 +170,11 @@ export function EditTaskDialog({ open, onOpenChange, task }: EditTaskDialogProps
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-2xl max-h-[85vh] flex flex-col p-0">
+        <DialogTitle>
+          <VisuallyHidden>Edit Task</VisuallyHidden>
+        </DialogTitle>
         <form onSubmit={handleSubmit(onSubmit)} className="flex-1 flex flex-col min-h-0">
-            <ScrollArea className="flex-1">
+            <ScrollArea className="flex-1 w-full">
                 <div className="space-y-4 pt-6 pb-6 px-6">
                     <div>
                         <Input 
@@ -254,13 +257,28 @@ export function EditTaskDialog({ open, onOpenChange, task }: EditTaskDialogProps
                                 <Controller
                                     name="startTime"
                                     control={control}
-                                    render={({field}) => (
-                                        <Input 
-                                            type="text"
-                                            className="h-9"
-                                            placeholder="Start time (HH:MM)"
-                                            {...field}
-                                        />
+                                    render={({field: { value, onChange }}) => (
+                                        <div className="relative">
+                                            <Input 
+                                                type="time"
+                                                className="h-9 pr-8"
+                                                placeholder="开始时间"
+                                                value={value || ''}
+                                                onChange={(e) => onChange(e.target.value)}
+                                            />
+                                            {value && (
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 p-0 hover:bg-muted rounded-full"
+                                                    onClick={() => onChange('')}
+                                                    title="清空开始时间"
+                                                >
+                                                    <X className="h-3 w-3" />
+                                                </Button>
+                                            )}
+                                        </div>
                                     )}
                                 />
                             )}
@@ -271,16 +289,13 @@ export function EditTaskDialog({ open, onOpenChange, task }: EditTaskDialogProps
                                 name="duration"
                                 control={control}
                                 render={({ field: { onChange, ...field } }) => (
-                                    <div className="relative">
-                                        <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                        <Input 
-                                            type="number"
-                                            placeholder="Duration (mins)"
-                                            className="pl-9 h-9"
-                                            onChange={e => onChange(e.target.value === '' ? undefined : +e.target.value)}
-                                            {...field}
-                                        />
-                                    </div>
+                                    <Input 
+                                        type="number"
+                                        placeholder="持续时间 (分钟)"
+                                        className="h-9"
+                                        onChange={e => onChange(e.target.value === '' ? undefined : +e.target.value)}
+                                        {...field}
+                                    />
                                 )}
                             />
                             <Controller
@@ -290,9 +305,7 @@ export function EditTaskDialog({ open, onOpenChange, task }: EditTaskDialogProps
                                     <Select onValueChange={field.onChange} value={field.value}>
                                     <SelectTrigger className="w-full h-9 px-3">
                                         <div className="flex items-center gap-2">
-                                             {selectedList?.color && (
-                                                <div className={cn("h-2.5 w-2.5 rounded-full", listColorMap[selectedList.color])} />
-                                            )}
+
                                             <SelectValue placeholder="Select a list" />
                                         </div>
                                     </SelectTrigger>

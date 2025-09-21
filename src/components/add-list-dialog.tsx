@@ -21,14 +21,22 @@ import type { List } from '@/lib/types';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { cn } from '@/lib/utils';
 import React from 'react';
+import * as Lucide from 'lucide-react';
 
 const listColors = [
   'red', 'orange', 'yellow', 'green', 'blue', 'purple', 'gray', 'pink', 'brown'
 ] as const;
 
+const listIcons = [
+  'List', 'Briefcase', 'Heart', 'Home', 'Star', 'BookOpen', 'Car', 'Coffee',
+  'ShoppingCart', 'Camera', 'Music', 'Gamepad2', 'Dumbbell', 'Plane',
+  'Utensils', 'GraduationCap', 'Stethoscope', 'Palette', 'Code', 'Gift'
+] as const;
+
 const listSchema = z.object({
   title: z.string().min(1, 'Title is required'),
   color: z.enum(listColors).default('gray'),
+  icon: z.string().default('List'),
 });
 
 type ListFormValues = z.infer<typeof listSchema>;
@@ -47,6 +55,7 @@ export function AddListDialog({ open, onOpenChange }: AddListDialogProps) {
     defaultValues: {
       title: '',
       color: 'gray',
+      icon: 'List',
     }
   });
 
@@ -62,7 +71,7 @@ export function AddListDialog({ open, onOpenChange }: AddListDialogProps) {
     const newList: List = {
       id: data.title.toLowerCase().replace(/\s+/g, '-'),
       title: data.title,
-      icon: 'List', // Default icon for new lists
+      icon: data.icon,
       color: data.color,
     };
     dispatch({ type: 'ADD_LIST', payload: newList });
@@ -76,7 +85,7 @@ export function AddListDialog({ open, onOpenChange }: AddListDialogProps) {
   
   React.useEffect(() => {
     if (open) {
-      reset({ title: '', color: 'gray' });
+      reset({ title: '', color: 'gray', icon: 'List' });
     }
   }, [open, reset]);
 
@@ -106,6 +115,47 @@ export function AddListDialog({ open, onOpenChange }: AddListDialogProps) {
             <Input id="title" {...register('title')} placeholder="e.g. Project Phoenix" />
             {errors.title && <p className="text-sm text-destructive">{errors.title.message}</p>}
           </div>
+
+          <Controller
+            name="icon"
+            control={control}
+            render={({ field }) => {
+              const IconComponent = (Lucide[field.value as keyof typeof Lucide] as React.ComponentType<{className?: string}>) || Lucide.List;
+              return (
+                <div className="flex items-center gap-4">
+                  <label className="text-sm font-medium">Icon</label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" size="sm" className="flex items-center gap-2">
+                        <IconComponent className="h-4 w-4" />
+                        <span>{field.value}</span>
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-64">
+                      <div className="grid grid-cols-5 gap-2">
+                        {listIcons.map(iconName => {
+                          const Icon = (Lucide[iconName as keyof typeof Lucide] as React.ComponentType<{className?: string}>) || Lucide.List;
+                          return (
+                            <button
+                              key={iconName}
+                              type="button"
+                              className={cn(
+                                "p-2 rounded hover:bg-gray-100 transition-colors",
+                                field.value === iconName && "bg-gray-200"
+                              )}
+                              onClick={() => field.onChange(iconName)}
+                            >
+                              <Icon className="h-4 w-4" />
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              );
+            }}
+          />
 
           <Controller
             name="color"

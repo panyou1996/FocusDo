@@ -15,6 +15,9 @@ type Action =
   | { type: 'ADD_TASK'; payload: Task }
   | { type: 'UPDATE_TASK'; payload: Task }
   | { type: 'DELETE_TASK'; payload: string }
+  | { type: 'ADD_EVENT'; payload: CalendarEvent }
+  | { type: 'UPDATE_EVENT'; payload: CalendarEvent }
+  | { type: 'DELETE_EVENT'; payload: string }
   | { type: 'ADD_TAG'; payload: Tag }
   | { type: 'ADD_LIST'; payload: List }
   | { type: 'UPDATE_LIST'; payload: List }
@@ -39,6 +42,20 @@ const appReducer = (state: AppState, action: Action): AppState => {
       return {
         ...state,
         tasks: state.tasks.filter((task) => task.id !== action.payload),
+      };
+    case 'ADD_EVENT':
+      return { ...state, events: [...state.events, action.payload] };
+    case 'UPDATE_EVENT':
+      return {
+        ...state,
+        events: state.events.map((event) =>
+          event.id === action.payload.id ? action.payload : event
+        ),
+      };
+    case 'DELETE_EVENT':
+      return {
+        ...state,
+        events: state.events.filter((event) => event.id !== action.payload),
       };
     case 'ADD_TAG':
         // Avoid adding duplicate tags
@@ -71,9 +88,6 @@ const appReducer = (state: AppState, action: Action): AppState => {
 
 const getInitialState = (): AppState => {
   const initialState = { tasks: initialTasks, lists: initialLists, tags: initialTags, events: initialEvents };
-  if (typeof window === 'undefined') {
-    return initialState;
-  }
   try {
     const item = window.localStorage.getItem('aqua-do-state');
     if (item) {
@@ -123,3 +137,8 @@ export const useTasksDispatch = () => {
   }
   return dispatch;
 };
+
+// 添加明确的客户端组件标记
+export const TasksProviderClient = TasksProvider;
+export const useTasksClient = useTasks;
+export const useTasksDispatchClient = useTasksDispatch;

@@ -3,7 +3,7 @@
 
 import type { Task, CalendarEvent } from '@/lib/types';
 import { TaskItem } from './task-item';
-import { Droppable } from 'react-beautiful-dnd';
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 
 type Item = (Task & { type: 'task' }) | (CalendarEvent & { type: 'event' });
 
@@ -21,32 +21,28 @@ export function TaskList({ items, viewMode = 'detailed', droppableId, isDropDisa
         return null;
     }
     return (
-        <div className="text-center py-10 border-2 border-dashed rounded-lg">
-        <p className="text-muted-foreground">No tasks here. Looks like a clean slate!</p>
-    </div>
+      <div className="flex flex-col items-center justify-center py-12 text-center">
+        <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
+          <div className="w-6 h-6 bg-gray-300 rounded" />
+        </div>
+        <p className="text-gray-500 text-sm">这里还没有任务，看起来很干净！</p>
+      </div>
     );
   }
 
   return (
-    <Droppable droppableId={droppableId} isDropDisabled={isDropDisabled}>
-      {(provided) => (
-        <div 
-          ref={provided.innerRef} 
-          {...provided.droppableProps} 
-          className="space-y-2"
-        >
-          {items.map((item, index) => (
-            <TaskItem 
-              key={item.id} 
-              item={item} 
-              viewMode={viewMode}
-              index={index} 
-              isDragDisabled={isDropDisabled || (item.type === 'task' && item.completed) || item.type === 'event' }
-            />
-          ))}
-          {provided.placeholder}
-        </div>
-      )}
-    </Droppable>
+    <SortableContext items={items.map(item => item.id)} strategy={verticalListSortingStrategy}>
+      <div className="space-y-2">
+        {items.map((item, index) => (
+          <TaskItem 
+            key={item.id} 
+            item={item} 
+            viewMode={viewMode}
+            index={index} 
+            isDragDisabled={isDropDisabled || (item.type === 'task' && item.completed) || item.type === 'event' }
+          />
+        ))}
+      </div>
+    </SortableContext>
   );
 }

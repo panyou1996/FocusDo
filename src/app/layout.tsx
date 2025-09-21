@@ -1,10 +1,14 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
-import { TasksProvider } from '@/hooks/use-tasks';
 import { Toaster } from '@/components/ui/toaster';
+import { ClientTasksProvider } from '@/components/client-tasks-provider';
 
-const inter = Inter({ subsets: ['latin'], variable: '--font-body' });
+const inter = Inter({ 
+  subsets: ['latin'], 
+  variable: '--font-body',
+  display: 'swap'
+});
 
 export const metadata: Metadata = {
   title: 'AquaDo',
@@ -18,15 +22,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-      </head>
       <body className={`${inter.variable} font-body antialiased`}>
-        <TasksProvider>
+        <ClientTasksProvider>
           {children}
-        </TasksProvider>
+        </ClientTasksProvider>
         <Toaster />
       </body>
     </html>
