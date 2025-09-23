@@ -82,26 +82,36 @@ const mapListFromDb = (list: any): List => ({
   icon: list.icon,
 });
 
-export const useSupabaseSync = () => {
-  const [syncing, setSyncing] = useState(false);
-  const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
-
   const syncToCloud = useCallback(async (tasks: Task[], lists: List[], events: CalendarEvent[]) => {
     setSyncing(true);
     try {
-      const { error: tasksError } = await supabase.from('tasks').upsert(tasks.map(mapTaskToDb));
-      if (tasksError) throw tasksError;
+      // 设置15秒超时限制
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('连接服务器超时')), 15000)
+      );
 
-      const { error: listsError } = await supabase.from('lists').upsert(lists.map(mapListToDb));
-      if (listsError) throw listsError;
+      // 并行执行所有操作
+      const [tasksRes, listsRes, eventsRes] = await Promise.race([
+        Promise.all([
+          supabase.from('tasks').upsert(tasks.map(mapTaskToDb)),
+          supabase.from('lists').upsert(lists.map(mapListToDb)),
+          supabase.from('events').upsert(events.map(mapEventToDb))
+        ]),
+        timeoutPromise
+      ]) as any[];
 
-      const { error: eventsError } = await supabase.from('events').upsert(events.map(mapEventToDb));
-      if (eventsError) throw eventsError;
+      // 检查每个操作的错误
+      if (tasksRes.error) throw tasksRes.error;
+      if (listsRes.error) throw listsRes.error;
+      if (eventsRes.error) throw eventsRes.error;
 
       setLastSyncTime(new Date());
       return { success: true };
-    } catch (error) {
-      return { success: false, error };
+    } catch (error: any) {
+      return { 
+        success: false, 
+        error: error.message || error 
+      };
     } finally {
       setSyncing(false);
     }
@@ -110,19 +120,40 @@ export const useSupabaseSync = () => {
   const syncFromCloud = useCallback(async () => {
     setSyncing(true);
     try {
-      const { data: tasks, error: tasksError } = await supabase.from('tasks').select('*');
-      if (tasksError) throw tasksError;
+      // 设置15秒超时限制
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('连接服务器超时')), 15000)
+      );
 
-      const { data: lists, error: listsError } = await supabase.from('lists').select('*');
-      if (listsError) throw listsError;
+      // 并行执行所有查询
+      const [tasksRes, listsRes, eventsRes] = await Promise.race([
+        Promise.all([
+          supabase.from('tasks').select('*'),
+          supabase.from('lists').select('*'),
+          supabase.from('events').select('*')
+        ]),
+        timeoutPromise
+      ]) as any[];
 
-      const { data: events, error: eventsError } = await supabase.from('events').select('*');
-      if (eventsError) throw eventsError;
+      // 检查每个操作的错误
+      if (tasksRes.error) throw tasksRes.error;
+      if (listsRes.error) throw listsRes.error;
+      if (eventsRes.error) throw eventsRes.error;
 
       setLastSyncTime(new Date());
-      return { success: true, data: { tasks: tasks.map(mapTaskFromDb), lists: lists.map(mapListFromDb), events: events.map(mapEventFromDb) } };
-    } catch (error) {
-      return { success: false, error };
+      return { 
+        success: true, 
+        data: { 
+          tasks: tasksRes.data.map(mapTaskFromDb),
+          lists: listsRes.data.map(mapListFromDb),
+          events: eventsRes.data.map(mapEventFromDb)
+        } 
+      };
+    } catch (error: any) {
+      return { 
+        success: false, 
+        error: error.message || error 
+      };
     } finally {
       setSyncing(false);
     }
