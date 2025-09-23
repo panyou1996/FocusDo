@@ -116,7 +116,7 @@ export function useCloudSync() {
 
     const debounceTimer = setTimeout(() => {
       handleSyncToCloud(true); // silent sync
-    }, 30000); // 30 seconds
+    }, 5 * 60 * 1000); // 5 minutes
 
     return () => clearTimeout(debounceTimer);
   }, [user, hasInitialSync, syncing, tasks, lists, events, handleSyncToCloud]);
